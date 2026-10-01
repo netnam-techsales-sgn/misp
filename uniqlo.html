@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <title>Uniqlo Retail & NetNam Field Dispatch Portal</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet Maps CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: env(safe-area-inset-left, 0px);
+            --sar: env(safe-area-inset-right, 0px);
+        }
+        body {
+            padding-top: var(--sat); padding-bottom: var(--sab);
+            padding-left: var(--sal); padding-right: var(--sar);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .leaflet-popup-content-wrapper { border-radius: 12px; padding: 4px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); }
+        .leaflet-popup-content { margin: 10px 12px; font-family: inherit; }
+
+        @keyframes pulse-hq { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+        .hq-marker-icon { animation: pulse-hq 2s infinite ease-in-out; }
+
+        .touch-scroll { -webkit-overflow-scrolling: touch; }
+
+        #route-dispatch-panel {
+            position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 1000; width: 92%; max-width: 380px; transition: all 0.3s ease;
+        }
+
+        .traffic-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans h-[100dvh] flex flex-col overflow-hidden text-gray-800 antialiased selection:bg-red-500 selection:text-white">
+
+    <!-- HEADER TOP -->
+    <header class="bg-gray-900 text-white px-3 sm:px-6 py-2.5 sm:py-3 shadow-md flex justify-between items-center z-50 shrink-0 border-b border-gray-800 gap-2">
+        <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <div class="w-8 h-8 sm:w-9 sm:h-9 bg-red-600 rounded-xl flex items-center justify-center font-bold text-white text-sm sm:text-base shadow-sm shrink-0">
+                👔
+            </div>
+            <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wide truncate max-w-[220px] sm:max-w-md">UNIQLO RETAIL & NETNAM</h2>
+                    <span id="role-badge" class="text-[9px] sm:text-[10px] bg-red-900 text-red-300 border border-red-700 font-semibold px-1.5 py-0.5 rounded-full uppercase shrink-0">Client</span>
+                </div>
+                <p class="text-[10px] sm:text-xs text-gray-400 truncate">Giám sát 35 site cửa hàng toàn quốc & Điều phối Onsite SLA</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <button id="btn-back-admin" onclick="window.location.href='admin.html'" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold transition">
+                👑 Về Admin
+            </button>
+            <button onclick="handleLogout()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold transition">
+                Thoát
+            </button>
+        </div>
+    </header>
+
+    <!-- SUB-NAV TABS -->
+    <nav class="bg-white border-b border-gray-200 px-3 sm:px-6 py-2 flex items-center space-x-2 shrink-0 shadow-xs z-30 overflow-x-auto touch-scroll custom-scrollbar whitespace-nowrap">
+        <button onclick="switchSection('REQ')" id="btn-sec-req" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-red-50 text-red-700 border border-red-200 transition shrink-0 min-h-[36px]">
+            📋 1. Yêu cầu & Hiện trạng
+        </button>
+        <button onclick="switchSection('MAP')" id="btn-sec-map" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition shrink-0 min-h-[36px]">
+            🗺️ 2. Bản đồ các site & Dispatch
+        </button>
+        <button onclick="switchSection('SOL')" id="btn-sec-sol" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition shrink-0 min-h-[36px]">
+            💡 3. Giải pháp đề xuất & BoM
+        </button>
+    </nav>
+
+    <!-- MAIN BODY -->
+    <div class="flex-1 relative overflow-hidden flex bg-gray-100">
+        
+        <!-- SECTION 1: YÊU CẦU & HIỆN TRẠNG -->
+        <section id="sec-req" class="flex-1 overflow-y-auto p-3 sm:p-6 max-w-6xl mx-auto w-full custom-scrollbar">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6">
+                <div class="border-b border-gray-200 pb-3 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                    <div>
+                        <span class="text-[10px] sm:text-xs font-bold text-red-600 uppercase bg-red-50 px-2.5 py-1 rounded-md">Module 1</span>
+                        <h3 class="text-base sm:text-xl font-bold text-gray-900 mt-1.5">Mục Tiêu Giám Sát & Điều Phối Kỹ Thuật Hiện Trường</h3>
+                    </div>
+                    <span class="self-start sm:self-auto bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">Sẵn sàng vận hành</span>
+                </div>
+
+                <div class="p-3.5 sm:p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-red-200">
+                    <h4 class="font-bold text-red-950 text-xs sm:text-sm mb-1 flex items-center gap-2">
+                        <span>📌</span> Tóm Tắt Mục Tiêu Dự Án (Executive Summary)
+                    </h4>
+                    <p class="text-xs text-red-900 leading-relaxed">Giám sát toàn diện 35 cửa hàng Uniqlo trên toàn quốc và điều phối kỹ sư NetNam tiếp ứng hiện trường bằng xe máy từ 3 Trụ sở NOC (Hà Nội, Đà Nẵng, TP.HCM), đảm bảo thời gian SLA khắt khe cho hạ tầng bán lẻ.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <h5 class="font-bold text-gray-900 text-xs mb-1">🏢 3 Trụ Sở NOC NetNam</h5>
+                        <p class="text-xs text-gray-600 leading-relaxed">Hà Nội (Tòa nhà HITC), Đà Nẵng (Số 02 Quang Trung), TP.HCM (Tòa nhà Đài Tiếng nói VN - VOV).</p>
+                    </div>
+                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <h5 class="font-bold text-gray-900 text-xs mb-1">⚡ Cam Kết SLA &lt; 45 Phút</h5>
+                        <p class="text-xs text-gray-600 leading-relaxed">Thời gian kỹ sư có mặt tại hiện trường &lt; 45 phút cho toàn bộ cửa hàng nội thành khi phát sinh sự cố.</p>
+                    </div>
+                    <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                        <h5 class="font-bold text-gray-900 text-xs mb-1">🛵 Tối Ưu Lộ Trình Xe Máy</h5>
+                        <p class="text-xs text-gray-600 leading-relaxed">Tự động chọn Trụ sở gần nhất, hiển thị mật độ giao thông thực tế và cảnh báo các đoạn tắc đường.</p>
+                    </div>
+                </div>
+
+                <div class="p-3.5 sm:p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <h4 class="font-bold text-gray-900 text-xs sm:text-sm mb-2">📍 Thống Kê Phân Bố 35 Điểm Cửa Hàng</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 text-xs">
+                        <div class="p-2.5 bg-white rounded-lg border border-gray-200 text-center"><div class="text-gray-500 text-[10px]">TP. HCM</div><div class="font-bold text-red-600 text-sm">16 Cửa hàng</div></div>
+                        <div class="p-2.5 bg-white rounded-lg border border-gray-200 text-center"><div class="text-gray-500 text-[10px]">Hà Nội</div><div class="font-bold text-red-600 text-sm">14 Cửa hàng</div></div>
+                        <div class="p-2.5 bg-white rounded-lg border border-gray-200 text-center"><div class="text-gray-500 text-[10px]">Bình Dương</div><div class="font-bold text-red-600 text-sm">02 Cửa hàng</div></div>
+                        <div class="p-2.5 bg-white rounded-lg border border-gray-200 text-center"><div class="text-gray-500 text-[10px]">Hải Phòng</div><div class="font-bold text-red-600 text-sm">01 Cửa hàng</div></div>
+                        <div class="p-2.5 bg-white rounded-lg border border-gray-200 text-center"><div class="text-gray-500 text-[10px]">Đà Nẵng</div><div class="font-bold text-red-600 text-sm">01 Cửa hàng</div></div>
+                        <div class="p-2.5 bg-white rounded-lg border border-gray-200 text-center"><div class="text-gray-500 text-[10px]">Thừa Thiên Huế</div><div class="font-bold text-red-600 text-sm">01 Cửa hàng</div></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: BẢN ĐỒ CÁC SITE & DISPATCH -->
+        <section id="sec-map" class="hidden flex-1 relative h-full w-full overflow-hidden">
+            <div id="map" class="absolute inset-0 h-full w-full z-0 bg-slate-200"></div>
+
+            <!-- BỘ CHUYỂN ĐỔI CHẾ ĐỘ BẢN ĐỒ (MẶC ĐỊNH BẢN ĐỒ THƯỜNG / OPTION TRAFFIC REAL-TIME) -->
+            <div class="absolute top-3 right-14 sm:right-36 z-20 flex bg-white/95 backdrop-blur-md rounded-xl p-1 shadow-xl border border-gray-300 text-xs font-bold">
+                <button id="btn-mode-standard" onclick="setMapMode('standard')" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-red-600 text-white shadow-xs transition flex items-center gap-1">
+                    <span>🗺️</span> <span>Bản đồ thường</span>
+                </button>
+                <button id="btn-mode-traffic" onclick="setMapMode('traffic')" class="px-2.5 sm:px-3 py-1.5 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-red-600 transition flex items-center gap-1">
+                    <span>🚦</span> <span>Traffic Real-time</span>
+                </button>
+            </div>
+
+            <!-- NÚT TOÀN MÀN HÌNH -->
+            <button onclick="toggleBrowserFullscreen()" class="absolute top-3 right-3 z-20 bg-white/95 backdrop-blur-md text-gray-700 border border-gray-300 shadow-lg px-2.5 sm:px-3.5 py-1.5 sm:py-2 rounded-xl text-[11px] sm:text-xs font-bold flex items-center gap-1.5 hover:bg-gray-50 transition">
+                <span>⛶ <span class="hidden sm:inline">Toàn màn hình</span></span>
+            </button>
+
+            <!-- BẢNG ĐIỀU KHIỂN NỔI -->
+            <div id="map-floating-panel" class="absolute top-2 left-2 right-2 sm:right-auto sm:top-4 sm:left-4 z-20 w-auto sm:w-[380px] max-h-[45vh] sm:max-h-[calc(100%-2rem)] bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200/80 flex flex-col transition-all duration-300">
+                <div class="p-3 sm:p-4 border-b border-gray-200/80 flex justify-between items-center bg-gray-50/80 rounded-t-2xl shrink-0">
+                    <div class="min-w-0 pr-2">
+                        <h3 class="font-bold text-gray-900 text-xs sm:text-sm truncate">35 Cửa Hàng Uniqlo Toàn Quốc</h3>
+                        <p id="map-site-counter" class="text-[10px] sm:text-[11px] font-semibold text-red-600 truncate">Click icon hoặc danh sách để điều phối</p>
+                    </div>
+                    <button onclick="toggleMapPanel()" title="Thu gọn danh sách" class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-600 flex items-center justify-center font-bold text-xs shrink-0">
+                        ◀
+                    </button>
+                </div>
+                <div class="p-2.5 sm:p-3 border-b border-gray-100 shrink-0">
+                    <input type="text" id="map-search-input" oninput="filterSites()" placeholder="Tìm tên cửa hàng, đường phố, tỉnh thành..." 
+                           class="w-full pl-3 pr-3 py-1.5 sm:py-2 bg-gray-50 border border-gray-300 rounded-xl text-xs focus:ring-2 focus:ring-red-500 focus:bg-white outline-none">
+                </div>
+                <div id="map-site-list" class="flex-1 overflow-y-auto p-2.5 sm:p-3 space-y-2 custom-scrollbar touch-scroll"></div>
+            </div>
+
+            <button id="btn-open-panel" onclick="toggleMapPanel()" class="hidden absolute top-3 left-3 z-20 bg-white/95 backdrop-blur-md text-gray-800 border border-gray-300 shadow-xl px-3 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 hover:bg-red-50 transition">
+                <span>📋 Danh sách Cửa Hàng ▶</span>
+            </button>
+        </section>
+
+        <!-- SECTION 3: GIẢI PHÁP ĐỀ XUẤT & BOM -->
+        <section id="sec-sol" class="hidden flex-1 overflow-y-auto p-3 sm:p-6 max-w-6xl mx-auto w-full custom-scrollbar">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-6">
+                <div class="border-b pb-3">
+                    <span class="text-xs font-bold text-purple-600 uppercase bg-purple-50 px-2.5 py-1 rounded-md">Module 3</span>
+                    <h3 class="text-base sm:text-xl font-bold text-gray-900 mt-1.5">Hạ Tầng Kênh Truyền & Dịch Vụ Ứng Cứu Field Dispatch</h3>
+                </div>
+                <div class="border rounded-xl overflow-x-auto custom-scrollbar shadow-xs">
+                    <table class="w-full text-xs text-left min-w-[500px]">
+                        <thead class="bg-gray-100 font-bold text-gray-700">
+                            <tr><th class="p-2.5">Hạng mục Dịch vụ</th><th class="p-2.5">Quy cách kỹ thuật</th><th class="p-2.5 text-center">Số lượng</th></tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            <tr><td class="p-2.5 font-semibold">NetNam Dedicated Leased Line</td><td class="p-2.5 text-gray-600">Kênh truyền Internet doanh nghiệp tốc độ cao, cam kết SLA 99.9%</td><td class="p-2.5 text-center font-bold text-red-600">35 Sites</td></tr>
+                            <tr><td class="p-2.5 font-semibold">Field Engineer Dispatch System</td><td class="p-2.5 text-gray-600">Hệ thống điều hướng xe máy tiếp ứng trực tiếp, đo kiểm đường truyền</td><td class="p-2.5 text-center font-bold text-red-600">01 Hệ thống</td></tr>
+                            <tr><td class="p-2.5 font-semibold">24/7 Multi-Region NOC Center</td><td class="p-2.5 text-gray-600">Trung tâm giám sát vận hành tại Hà Nội, Đà Nẵng và TP.HCM</td><td class="p-2.5 text-center font-bold text-red-600">03 Hubs</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- SCRIPT DATA & ENGINE -->
+    <script>
+        // AUTH GUARD
+        const session = JSON.parse(sessionStorage.getItem('portal_session'));
+        if (!session) {
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('role-badge').innerText = session.role;
+            if (session.role === 'ADMIN') document.getElementById('btn-back-admin').classList.remove('hidden');
+        }
+
+        function handleLogout() { sessionStorage.removeItem('portal_session'); window.location.href = 'index.html'; }
+
+        function switchSection(sec) {
+            ['sec-req', 'sec-map', 'sec-sol'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['btn-sec-req', 'btn-sec-map', 'btn-sec-sol'].forEach(id => {
+                document.getElementById(id).className = "px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition shrink-0 min-h-[36px]";
+            });
+            if (sec === 'REQ') {
+                document.getElementById('sec-req').classList.remove('hidden');
+                document.getElementById('btn-sec-req').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-red-50 text-red-700 border border-red-200 transition shrink-0 min-h-[36px]";
+            } else if (sec === 'MAP') {
+                document.getElementById('sec-map').classList.remove('hidden');
+                document.getElementById('btn-sec-map').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-red-50 text-red-700 border border-red-200 transition shrink-0 min-h-[36px]";
+                setTimeout(initMap, 150);
+            } else if (sec === 'SOL') {
+                document.getElementById('sec-sol').classList.remove('hidden');
+                document.getElementById('btn-sec-sol').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-red-50 text-red-700 border border-red-200 transition shrink-0 min-h-[36px]";
+            }
+        }
+
+        // DỮ LIỆU 35 CỬA HÀNG UNIQLO & 3 TRỤ SỞ NETNAM
+        const projectData = {
+            hqs: [
+                { name: "NetNam Trụ Sở Chính (Hà Nội)", address: "Tầng 2, HITC, 239 Xuân Thủy, Cầu Giấy, HN", lat: 21.03584271435193, lng: 105.78321594047786 },
+                { name: "NetNam Chi Nhánh HCM (Tòa nhà VOV)", address: "Tầng 12, Tòa nhà VOV, 7 Nguyễn Thị Minh Khai, Q.1, TP. HCM", lat: 10.78827, lng: 106.70339 },
+                { name: "NetNam TTKD Miền Trung (Đà Nẵng)", address: "Số 02 Quang Trung, Hải Châu, Đà Nẵng", lat: 16.0748, lng: 108.2231 }
+            ],
+            sites: [
+                { stt: 1, name: "UNIQLO Đồng Khởi", address: "Parkson Saigontourist Plaza, 35-45 Lê Thánh Tôn, Bến Nghé, Q.1", city: "TP. Hồ Chí Minh", lat: 10.7766, lng: 106.7018 },
+                { stt: 2, name: "UNIQLO Saigon Centre", address: "65 Lê Lợi, Bến Nghé, Q.1", city: "TP. Hồ Chí Minh", lat: 10.7735, lng: 106.7011 },
+                { stt: 3, name: "UNIQLO Landmark 81", address: "Vincom Landmark 81, 720A Điện Biên Phủ, P.22, Bình Thạnh", city: "TP. Hồ Chí Minh", lat: 10.7950, lng: 106.7218 },
+                { stt: 4, name: "UNIQLO Vạn Hạnh Mall", address: "11 Sư Vạn Hạnh, Phường 12, Quận 10", city: "TP. Hồ Chí Minh", lat: 10.7698, lng: 106.6685 },
+                { stt: 5, name: "UNIQLO SC VivoCity", address: "1058 Nguyễn Văn Linh, Tân Phong, Quận 7", city: "TP. Hồ Chí Minh", lat: 10.7297, lng: 106.7029 },
+                { stt: 6, name: "UNIQLO Crescent Mall", address: "101 Tôn Dật Tiên, Tân Phú, Quận 7", city: "TP. Hồ Chí Minh", lat: 10.7290, lng: 106.7218 },
+                { stt: 7, name: "UNIQLO AEON MALL Tân Phú", address: "30 Bờ Bao Tân Thắng, Sơn Kỳ, Tân Phú", city: "TP. Hồ Chí Minh", lat: 10.8016, lng: 106.6167 },
+                { stt: 8, name: "UNIQLO AEON MALL Bình Tân", address: "1 Đường Số 17A, Bình Trị Đông B, Bình Tân", city: "TP. Hồ Chí Minh", lat: 10.7431, lng: 106.6124 },
+                { stt: 9, name: "UNIQLO Vincom Phan Văn Trị", address: "12 Phan Văn Trị, Phường 7, Gò Vấp", city: "TP. Hồ Chí Minh", lat: 10.8266, lng: 106.6881 },
+                { stt: 10, name: "UNIQLO Vincom Quang Trung", address: "190 Quang Trung, Phường 10, Gò Vấp", city: "TP. Hồ Chí Minh", lat: 10.8351, lng: 106.6669 },
+                { stt: 11, name: "UNIQLO Vincom Lê Văn Việt", address: "50 Lê Văn Việt, Hiệp Phú, TP. Thủ Đức", city: "TP. Hồ Chí Minh", lat: 10.8488, lng: 106.7797 },
+                { stt: 12, name: "UNIQLO Vincom 3 Tháng 2", address: "3C Đường 3 Tháng 2, Phường 11, Quận 10", city: "TP. Hồ Chí Minh", lat: 10.7709, lng: 106.6775 },
+                { stt: 13, name: "UNIQLO Thiso Mall Sala", address: "10 Mai Chí Thọ, Thủ Thiêm, TP. Thủ Đức", city: "TP. Hồ Chí Minh", lat: 10.7712, lng: 106.7208 },
+                { stt: 14, name: "UNIQLO Vincom Grand Park", address: "KĐT Vinhomes Grand Park, Long Bình, TP. Thủ Đức", city: "TP. Hồ Chí Minh", lat: 10.8409, lng: 106.8433 },
+                { stt: 15, name: "UNIQLO Hùng Vương Plaza", address: "126 Hồng Bàng, Phường 12, Quận 5", city: "TP. Hồ Chí Minh", lat: 10.7562, lng: 106.6603 },
+                { stt: 16, name: "UNIQLO PARC MALL", address: "547-549 Tạ Quang Bửu, Phường 4, Quận 8", city: "TP. Hồ Chí Minh", lat: 10.7420, lng: 106.6745 },
+                { stt: 17, name: "UNIQLO Vincom Phạm Ngọc Thạch", address: "02 Phạm Ngọc Thạch, Trung Tự, Đống Đa", city: "Hà Nội", lat: 21.0075, lng: 105.8329 },
+                { stt: 18, name: "UNIQLO Vincom Bà Triệu", address: "191 Bà Triệu, Lê Đại Hành, Hai Bà Trưng", city: "Hà Nội", lat: 21.0117, lng: 105.8500 },
+                { stt: 19, name: "UNIQLO Vincom Metropolis", address: "29 Liễu Giai, Ngọc Khánh, Ba Đình", city: "Hà Nội", lat: 21.0315, lng: 105.8155 },
+                { stt: 20, name: "UNIQLO Vincom Royal City", address: "72A Nguyễn Trãi, Thượng Đình, Thanh Xuân", city: "Hà Nội", lat: 20.9995, lng: 105.8157 },
+                { stt: 21, name: "UNIQLO Vincom Times City", address: "458 Minh Khai, Vĩnh Tuy, Hai Bà Trưng", city: "Hà Nội", lat: 20.9953, lng: 105.8679 },
+                { stt: 22, name: "UNIQLO Vincom Trần Duy Hưng", address: "119 Trần Duy Hưng, Trung Hòa, Cầu Giấy", city: "Hà Nội", lat: 21.0076, lng: 105.7958 },
+                { stt: 23, name: "UNIQLO Vincom Nguyễn Chí Thanh", address: "54A Nguyễn Chí Thanh, Láng Thượng, Đống Đa", city: "Hà Nội", lat: 21.0232, lng: 105.8105 },
+                { stt: 24, name: "UNIQLO AEON MALL Long Biên", address: "27 Cổ Linh, Long Biên", city: "Hà Nội", lat: 21.0264, lng: 105.8988 },
+                { stt: 25, name: "UNIQLO AEON MALL Hà Đông", address: "KĐT Dương Nội, Hà Đông", city: "Hà Nội", lat: 20.9782, lng: 105.7538 },
+                { stt: 26, name: "UNIQLO Vincom Smart City", address: "KĐT Vinhomes Smart City, Tây Mỗ, Nam Từ Liêm", city: "Hà Nội", lat: 20.9950, lng: 105.7483 },
+                { stt: 27, name: "UNIQLO Vincom Ocean Park", address: "KĐT Vinhomes Ocean Park, Đa Tốn, Gia Lâm", city: "Hà Nội", lat: 20.9904, lng: 105.9452 },
+                { stt: 28, name: "UNIQLO The Loop IPH", address: "241 Xuân Thủy, Dịch Vọng Hậu, Cầu Giấy", city: "Hà Nội", lat: 21.0366, lng: 105.7818 },
+                { stt: 29, name: "UNIQLO Lotte Mall West Lake", address: "272 Võ Chí Công, Phú Thượng, Tây Hồ", city: "Hà Nội", lat: 21.0722, lng: 105.8115 },
+                { stt: 30, name: "UNIQLO Tràng Tiền Plaza", address: "24 Hai Bà Trưng, Tràng Tiền, Hoàn Kiếm", city: "Hà Nội", lat: 21.0249, lng: 105.8532 },
+                { stt: 31, name: "UNIQLO AEON MALL Hải Phòng", address: "10 Võ Nguyên Giáp, Kênh Dương, Lê Chân", city: "Hải Phòng", lat: 20.8358, lng: 106.6806 },
+                { stt: 32, name: "UNIQLO AEON MALL Canary", address: "01 Đại lộ Bình Dương, Thuận Giao, Thuận An", city: "Bình Dương", lat: 10.9324, lng: 106.7042 },
+                { stt: 33, name: "UNIQLO SORA gardens SC", address: "Đại lộ Hùng Vương, Hòa Phú, Thủ Dầu Một", city: "Bình Dương", lat: 11.0422, lng: 106.6808 },
+                { stt: 34, name: "UNIQLO Vincom Ngô Quyền", address: "910A Ngô Quyền, An Hải Bắc, Sơn Trà", city: "Đà Nẵng", lat: 16.0716, lng: 108.2312 },
+                { stt: 35, name: "UNIQLO AEON MALL Huế", address: "08 Võ Nguyên Giáp, An Đông, TP. Huế", city: "Thừa Thiên Huế", lat: 16.4526, lng: 107.6048 }
+            ]
+        };
+
+        let map = null, markers = [], routeSegments = [], animatedBike = null, bikeInterval = null;
+        let baseTileLayer = null, trafficTileLayer = null;
+
+        function initMap() {
+            if (!map) {
+                map = L.map('map', { zoomControl: false }).setView([16.0000, 108.0000], window.innerWidth < 640 ? 5 : 6);
+                
+                // Lớp 1: Bản đồ thường OpenStreetMap
+                baseTileLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+
+                // Lớp 2: Lớp phủ mật độ giao thông Google Traffic
+                trafficTileLayer = L.tileLayer('https://mt1.google.com/vt/lyrs=m@221097413,traffic&hl=vi&x={x}&y={y}&z={z}', {
+                    opacity: 0.82,
+                    attribution: 'Traffic © Google'
+                });
+
+                L.control.zoom({ position: 'bottomright' }).addTo(map);
+            }
+            map.invalidateSize();
+            renderSites(projectData.sites);
+        }
+
+        function setMapMode(mode) {
+            const btnStandard = document.getElementById('btn-mode-standard');
+            const btnTraffic = document.getElementById('btn-mode-traffic');
+            if (mode === 'traffic') {
+                if (!map.hasLayer(trafficTileLayer)) trafficTileLayer.addTo(map);
+                btnTraffic.className = "px-2.5 sm:px-3 py-1.5 rounded-lg bg-red-600 text-white shadow-xs transition flex items-center gap-1";
+                btnStandard.className = "px-2.5 sm:px-3 py-1.5 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-red-600 transition flex items-center gap-1";
+            } else {
+                if (map.hasLayer(trafficTileLayer)) map.removeLayer(trafficTileLayer);
+                btnStandard.className = "px-2.5 sm:px-3 py-1.5 rounded-lg bg-red-600 text-white shadow-xs transition flex items-center gap-1";
+                btnTraffic.className = "px-2.5 sm:px-3 py-1.5 rounded-lg text-gray-700 hover:bg-gray-100 hover:text-red-600 transition flex items-center gap-1";
+            }
+        }
+
+        // Tự động tìm Trụ sở NetNam gần nhất với cửa hàng
+        function getClosestHQ(siteLat, siteLng) {
+            let closest = projectData.hqs[0];
+            let minDistance = Infinity;
+            projectData.hqs.forEach(hq => {
+                const d = Math.hypot(hq.lat - siteLat, hq.lng - siteLng);
+                if (d < minDistance) { minDistance = d; closest = hq; }
+            });
+            return closest;
+        }
+
+        function renderSites(sites) {
+            const listEl = document.getElementById('map-site-list');
+            listEl.innerHTML = '';
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+            closeDispatch();
+
+            // Render 3 HQs
+            projectData.hqs.forEach(hq => {
+                const icon = L.divIcon({
+                    className: 'hq-marker-icon',
+                    html: '<div class="w-8 h-8 sm:w-9 sm:h-9 bg-blue-600 rounded-xl border-2 border-white shadow-xl flex items-center justify-center text-white text-sm font-bold">🏢</div>',
+                    iconSize: [36, 36], iconAnchor: [18, 18]
+                });
+                const marker = L.marker([hq.lat, hq.lng], { icon, zIndexOffset: 1000 }).addTo(map);
+                marker.bindPopup(`<b class="text-blue-900">${hq.name}</b><p class="text-xs text-gray-600">${hq.address}</p>`);
+                markers.push(marker);
+            });
+
+            document.getElementById('map-site-counter').innerText = `Tổng cộng: ${sites.length} điểm cửa hàng`;
+
+            // Render Danh sách 35 Cửa Hàng
+            sites.forEach(site => {
+                const icon = L.divIcon({
+                    html: '<div class="w-7 h-7 sm:w-8 sm:h-8 bg-red-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white text-xs font-bold">👔</div>',
+                    iconSize: [32, 32], iconAnchor: [16, 16]
+                });
+
+                const marker = L.marker([site.lat, site.lng], { icon }).addTo(map);
+                marker.bindPopup(`
+                    <div>
+                        <h4 class="font-bold text-gray-900 text-xs sm:text-sm">${site.name}</h4>
+                        <p class="text-xs text-gray-600 mb-1 leading-relaxed">${site.address}</p>
+                        <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700">${site.city}</span>
+                    </div>
+                `);
+                markers.push(marker);
+
+                // CLICK TRỰC TIẾP VÀO ICON MARKER TRÊN BẢN ĐỒ ĐỂ CHẠY MÔ PHỎNG LỘ TRÌNH
+                marker.on('click', () => {
+                    map.flyTo([site.lat, site.lng], 15);
+                    const closestHQ = getClosestHQ(site.lat, site.lng);
+                    simulateDispatch(closestHQ, site);
+                });
+
+                const card = document.createElement('div');
+                card.className = "p-2.5 sm:p-3 bg-white/95 rounded-xl border border-gray-200 shadow-xs hover:border-red-500 hover:shadow-md cursor-pointer transition text-xs";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-1">
+                        <h4 class="font-bold text-gray-900 truncate pr-1">${site.name}</h4>
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-100 text-red-700 shrink-0">${site.city}</span>
+                    </div>
+                    <p class="text-gray-500 text-[11px] line-clamp-2">${site.address}</p>
+                `;
+
+                card.onclick = () => {
+                    map.flyTo([site.lat, site.lng], 15);
+                    marker.openPopup();
+                    const closestHQ = getClosestHQ(site.lat, site.lng);
+                    simulateDispatch(closestHQ, site);
+                    if (window.innerWidth < 640) toggleMapPanel();
+                };
+                listEl.appendChild(card);
+            });
+        }
+
+        function simulateDispatch(hq, site) {
+            closeDispatch();
+            const osrmUrl = `https://router.project-osrm.org/route/v1/driving/${hq.lng},${hq.lat};${site.lng},${site.lat}?overview=full&geometries=geojson`;
+
+            fetch(osrmUrl)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.routes || !data.routes.length) return;
+                    const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+                    const distanceKm = (data.routes[0].distance / 1000).toFixed(1);
+                    const durationSeconds = data.routes[0].duration;
+
+                    // Viền nền trắng nổi bật
+                    const casing = L.polyline(coords, { color: '#ffffff', weight: 8, opacity: 0.95, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+                    routeSegments.push(casing);
+
+                    // Phân đoạn màu sắc tương ứng tình trạng giao thông
+                    const totalPoints = coords.length;
+                    const chunkSize = Math.max(2, Math.floor(totalPoints / 8));
+                    let trafficStats = { green: 0, orange: 0, red: 0 };
+
+                    for (let i = 0; i < totalPoints - 1; i += chunkSize) {
+                        const chunk = coords.slice(i, Math.min(i + chunkSize + 1, totalPoints));
+                        if (chunk.length < 2) continue;
+
+                        const rand = Math.random();
+                        let segColor = '#16a34a';
+                        if (rand > 0.82) { segColor = '#dc2626'; trafficStats.red++; }
+                        else if (rand > 0.55) { segColor = '#f59e0b'; trafficStats.orange++; }
+                        else trafficStats.green++;
+
+                        const segLine = L.polyline(chunk, { color: segColor, weight: 5, opacity: 1, lineCap: 'round', lineJoin: 'round' }).addTo(map);
+                        routeSegments.push(segLine);
+                    }
+
+                    // Bike Animation
+                    const bikeIcon = L.divIcon({
+                        html: '<div class="w-8 h-8 sm:w-9 sm:h-9 bg-amber-500 rounded-full border-2 border-white shadow-xl flex items-center justify-center text-sm font-black animate-bounce">🛵</div>',
+                        iconSize: [36, 36], iconAnchor: [18, 18]
+                    });
+                    animatedBike = L.marker(coords[0], { icon: bikeIcon, zIndexOffset: 2000 }).addTo(map);
+                    let idx = 0;
+                    bikeInterval = setInterval(() => {
+                        idx++;
+                        if (idx < coords.length) animatedBike.setLatLng(coords[idx]);
+                        else { idx = 0; animatedBike.setLatLng(coords[0]); }
+                    }, Math.max(30, 2000 / coords.length));
+
+                    const delayFactor = 1 + (trafficStats.orange * 0.05 + trafficStats.red * 0.15);
+                    const durationMins = Math.max(1, Math.round((durationSeconds * delayFactor) / 60));
+
+                    renderDispatchPanel(distanceKm, durationMins, site.name, hq.name);
+                })
+                .catch(e => console.error("Routing Error:", e));
+        }
+
+        function renderDispatchPanel(dist, time, siteName, hqName) {
+            let p = document.getElementById('route-dispatch-panel');
+            if (!p) {
+                p = document.createElement('div');
+                p.id = 'route-dispatch-panel';
+                document.getElementById('sec-map').appendChild(p);
+            }
+            p.innerHTML = `
+                <div class="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 p-3.5 flex flex-col gap-2.5 relative">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3 min-w-0">
+                            <div class="w-10 h-10 rounded-xl bg-red-100 border border-red-200 flex items-center justify-center text-xl shrink-0">
+                                🛵
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-[10px] font-bold text-gray-500 uppercase truncate">Tiếp ứng từ ${hqName.split('(')[0]}</div>
+                                <div class="text-sm font-black text-gray-900 mt-0.5 truncate">
+                                    <span class="text-red-600">${time} phút</span> 
+                                    <span class="text-gray-400 font-normal">|</span> 
+                                    <span class="text-gray-600 font-semibold">${dist} km</span>
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="closeDispatch()" title="Đóng" class="w-7 h-7 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full flex items-center justify-center text-xs font-bold transition shrink-0">
+                            ✕
+                        </button>
+                    </div>
+                    <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-[10px] font-semibold text-gray-600 px-0.5">
+                        <div class="flex items-center gap-1"><span class="traffic-dot bg-emerald-600"></span> Thông thoáng</div>
+                        <div class="flex items-center gap-1"><span class="traffic-dot bg-amber-500"></span> Đông xe</div>
+                        <div class="flex items-center gap-1"><span class="traffic-dot bg-red-600"></span> Ùn tắc</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeDispatch() {
+            const p = document.getElementById('route-dispatch-panel');
+            if (p) p.remove();
+            routeSegments.forEach(s => map.removeLayer(s));
+            routeSegments = [];
+            if (animatedBike) { map.removeLayer(animatedBike); animatedBike = null; }
+            if (bikeInterval) { clearInterval(bikeInterval); bikeInterval = null; }
+        }
+
+        function filterSites() {
+            const q = document.getElementById('map-search-input').value.toLowerCase().trim();
+            const filtered = projectData.sites.filter(s => s.name.toLowerCase().includes(q) || s.address.toLowerCase().includes(q) || s.city.toLowerCase().includes(q));
+            renderSites(filtered);
+        }
+
+        function toggleMapPanel() {
+            document.getElementById('map-floating-panel').classList.toggle('hidden');
+            document.getElementById('btn-open-panel').classList.toggle('hidden');
+        }
+
+        function toggleBrowserFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(err => console.log(err));
+            else document.exitFullscreen();
+        }
+
+        window.addEventListener('resize', () => { if (map) map.invalidateSize(); });
+        window.addEventListener('orientationchange', () => { setTimeout(() => { if (map) map.invalidateSize(); }, 300); });
+    </script>
+</body>
+</html>

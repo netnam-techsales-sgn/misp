@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#0f172a">
+    <title>TCB Ball - Đánh Giá Hiện Trạng & Giám Sát Hạ Tầng CNTT</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        :root {
+            --sat: env(safe-area-inset-top, 0px);
+            --sab: env(safe-area-inset-bottom, 0px);
+            --sal: env(safe-area-inset-left, 0px);
+            --sar: env(safe-area-inset-right, 0px);
+        }
+        body {
+            padding-top: var(--sat); padding-bottom: var(--sab);
+            padding-left: var(--sal); padding-right: var(--sar);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .touch-scroll { -webkit-overflow-scrolling: touch; }
+
+        .today-highlight-col {
+            background-color: #fef3c7 !important;
+            border-left: 2px solid #f59e0b !important;
+            border-right: 2px solid #f59e0b !important;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans h-[100dvh] flex flex-col overflow-hidden text-gray-800 antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- HEADER TOP -->
+    <header class="bg-gray-900 text-white px-3 sm:px-6 py-2.5 sm:py-3 shadow-md flex justify-between items-center z-50 shrink-0 border-b border-gray-800 gap-2">
+        <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <div class="w-8 h-8 sm:w-9 sm:h-9 bg-indigo-600 rounded-xl flex items-center justify-center font-bold text-white text-sm sm:text-base shadow-sm shrink-0">
+                🏭
+            </div>
+            <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <h2 class="text-xs sm:text-sm font-bold uppercase tracking-wide truncate max-w-[220px] sm:max-w-md">TCB BALL BEVERAGE CAN VIỆT NAM</h2>
+                    <span id="role-badge" class="text-[9px] sm:text-[10px] bg-indigo-900 text-indigo-300 border border-indigo-700 font-semibold px-1.5 py-0.5 rounded-full uppercase shrink-0">Client</span>
+                </div>
+                <p class="text-[10px] sm:text-xs text-gray-400 truncate">Dự án Đánh giá hiện trạng & Thiết lập Giám sát Hệ thống Hạ tầng CNTT (MISP)</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2 sm:space-x-3">
+            <button id="btn-back-admin" onclick="window.location.href='admin.html'" class="hidden bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-700 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold transition">
+                👑 Về Admin
+            </button>
+            <button onclick="handleLogout()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-500/30 text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 rounded-lg font-semibold transition">
+                Thoát
+            </button>
+        </div>
+    </header>
+
+    <!-- SUB-NAV TABS (ĐÃ SẮP XẾP LẠI THỨ TỰ 6 MODULE) -->
+    <nav class="bg-white border-b border-gray-200 px-3 sm:px-6 py-2 flex items-center space-x-2 shrink-0 shadow-xs z-30 overflow-x-auto touch-scroll custom-scrollbar whitespace-nowrap">
+        <button onclick="switchSection('REQ')" id="btn-sec-req" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 transition shrink-0 min-h-[36px]">
+            📋 1. Yêu cầu & Hiện trạng
+        </button>
+        <button onclick="switchSection('SOL')" id="btn-sec-sol" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition shrink-0 min-h-[36px]">
+            💡 2. Giải pháp đề xuất & BoM
+        </button>
+        <button onclick="switchSection('STAFF')" id="btn-sec-staff" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition shrink-0 min-h-[36px]">
+            👥 3. Nhân sự On-site
+        </button>
+        <button onclick="switchSection('DELIVER')" id="btn-sec-deliver" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition shrink-0 min-h-[36px]">
+            📦 4. Sản phẩm giao nộp
+        </button>
+        <button onclick="switchSection('PREP')" id="btn-sec-prep" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition shrink-0 min-h-[36px]">
+            📌 5. Yêu cầu chuẩn bị
+        </button>
+        <button onclick="switchSection('TIMELINE')" id="btn-sec-timeline" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition shrink-0 min-h-[36px]">
+            ⏳ 6. Tiến độ dự án theo kế hoạch
+        </button>
+    </nav>
+
+    <!-- MAIN BODY -->
+    <div class="flex-1 relative overflow-hidden flex bg-gray-100">
+        
+        <!-- ================================================================= -->
+        <!-- MODULE 1: YÊU CẦU & HIỆN TRẠNG (KÈM BẢNG SOW) -->
+        <!-- ================================================================= -->
+        <section id="sec-req" class="flex-1 overflow-y-auto p-3 sm:p-6 max-w-6xl mx-auto w-full custom-scrollbar space-y-4 sm:space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6">
+                
+                <div class="border-b border-gray-200 pb-3 sm:pb-4 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                    <div>
+                        <span class="text-[10px] sm:text-xs font-bold text-indigo-600 uppercase bg-indigo-50 px-2.5 py-1 rounded-md">Module 1</span>
+                        <h3 class="text-base sm:text-xl font-bold text-gray-900 mt-1.5 sm:mt-2">Yêu Cầu Đánh Giá Hiện Trạng & Thiết Lập Giám Sát (MISP)</h3>
+                    </div>
+                    <span class="self-start sm:self-auto bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs font-bold px-2.5 sm:px-3 py-1 rounded-full">Kế hoạch: 08/09/2026 - 22/09/2026 (15 ngày)</span>
+                </div>
+
+                <!-- TÓM TẮT BAN LÃNH ĐẠO -->
+                <div class="p-3.5 sm:p-4 bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl border border-indigo-200">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 mb-2">
+                        <h4 class="font-bold text-indigo-950 text-xs sm:text-sm flex items-center gap-2">
+                            <span>📌</span> Bối cảnh dự án (Executive Summary)
+                        </h4>
+                        <span class="self-start sm:self-auto text-[10px] sm:text-[11px] font-semibold text-indigo-800 bg-white px-2 py-0.5 rounded border border-indigo-200">Phiên bản: v1.1 – [Update 08/09/2026]</span>
+                    </div>
+                    <p class="text-xs text-indigo-900 leading-relaxed">
+                        Dự án thực hiện khảo sát toàn diện, đo kiểm chất lượng vật lý cáp mạng tại xưởng cũ, rà soát cấu hình thiết bị mạng, máy chủ Server, hệ thống lưu trữ SAN Storage, Camera PoE và đo kiểm vùng phủ sóng Wi-Fi Heatmap. Đồng thời thiết lập trạm giám sát thời gian thực (Live Dashboard 24/7) trong 15 ngày nhằm phát hiện các điểm nghẽn tiềm ẩn và đưa ra báo cáo khuyến nghị chuẩn hóa hạ tầng.
+                    </p>
+                </div>
+
+                <!-- 5 KHỐI NHIỆM VỤ KHẢO SÁT -->
+                <div class="space-y-2.5 sm:space-y-3">
+                    <h4 class="font-bold text-gray-900 text-xs sm:text-sm flex items-center gap-2">
+                        <span>🔍</span> 4 Khối Hạng Mục Đánh Giá Hiện Trạng Kỹ Thuật
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
+                        <div class="p-3 sm:p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                            <h5 class="font-bold text-gray-900 text-xs mb-1">🔌 1. Hạ tầng Cáp Mạng & Port Mapping</h5>
+                            <p class="text-[11px] sm:text-xs text-gray-600 leading-relaxed">Đo kiểm 100% các line cáp tại xưởng cũ (đủ 8 sợi, đạt 1GB/100MB), bấm lại đầu mạng lỗi, dán nhãn định danh 2 đầu cáp và lập sơ đồ Port Mapping chi tiết.</p>
+                        </div>
+                        <div class="p-3 sm:p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                            <h5 class="font-bold text-gray-900 text-xs mb-1">🌐 2. Cấu trúc Mạng & Routing/VLAN</h5>
+                            <p class="text-[11px] sm:text-xs text-gray-600 leading-relaxed">Thu thập và backup cấu hình Core/Access Switch, Router, Firewall; rà soát dải IP Schema, chính sách VLAN, băng thông Uplink và cơ chế dự phòng HA.</p>
+                        </div>
+                        <div class="p-3 sm:p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                            <h5 class="font-bold text-gray-900 text-xs mb-1">🖥️ 3. Hệ thống Server & SAN Storage</h5>
+                            <p class="text-[11px] sm:text-xs text-gray-600 leading-relaxed">Ghi nhận thông số phần cứng, OS, Network Interface, tình trạng cập nhật; kiểm tra cấu hình SAN Storage, phân vùng LUN và cơ chế bảo vệ RAID.</p>
+                        </div>
+                        <div class="p-3 sm:p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                            <h5 class="font-bold text-gray-900 text-xs mb-1">📶 4. Đo Kiểm Sóng Wi-Fi (Heatmap Survey)</h5>
+                            <p class="text-[11px] sm:text-xs text-gray-600 leading-relaxed">Sử dụng thiết bị chuyên dụng đo kiểm bản đồ nhiệt toàn bộ xưởng và văn phòng; phân tích nhiễu kênh (Interference), điểm chết sóng (dead zone) và test Roaming.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PHẠM VI CÔNG VIỆC KỸ THUẬT CHI TIẾT (SOW) -->
+                <div class="space-y-2.5 sm:space-y-3">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-1">
+                        <h4 class="font-bold text-gray-900 text-xs sm:text-sm flex items-center gap-2">
+                            <span>🛠️</span> <span>Phạm Vi Công Việc Kỹ Thuật NetNam Thực Hiện (Scope of Work - SOW)</span>
+                        </h4>
+                        <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 self-start sm:self-auto">
+                            Quy trình chuẩn hóa 7 hạng mục
+                        </span>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-xl overflow-x-auto touch-scroll custom-scrollbar shadow-xs bg-white">
+                        <table class="w-full text-xs text-left min-w-[1020px] divide-y divide-gray-200">
+                            <thead class="bg-gray-100/90 font-bold text-gray-700 text-[11px]">
+                                <tr>
+                                    <th class="p-3 text-center w-12 shrink-0">STT</th>
+                                    <th class="p-3 w-52">Hạng mục Công việc</th>
+                                    <th class="p-3 min-w-[340px]">Chi tiết các tác vụ kỹ sư NetNam trực tiếp thực hiện</th>
+                                    <th class="p-3 text-center w-28">Đơn vị thực hiện</th>
+                                    <th class="p-3 w-56">Công cụ & Thiết bị chuyên dụng</th>
+                                    <th class="p-3 w-56">Sản phẩm giao nộp tương ứng</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 text-gray-700">
+                                <tr class="hover:bg-gray-50/80 transition">
+                                    <td class="p-3 text-center font-bold text-gray-500 align-top">1</td>
+                                    <td class="p-3 font-semibold text-gray-900 align-top">Đo kiểm, Test tín hiệu & Dán nhãn cáp xưởng cũ</td>
+                                    <td class="p-3 align-top leading-relaxed text-[11px] text-gray-600">
+                                        <ul class="list-disc pl-4 space-y-1">
+                                            <li><b class="text-gray-800">Kiểm tra vật lý:</b> Rà soát tuyến cáp đi trong máng, tủ Rack và các đầu cắm mạng tại khu vực xưởng cũ.</li>
+                                            <li><b class="text-gray-800">Đo kiểm chất lượng:</b> Dùng máy  chuyên dụng đo thông mạch đủ 8 sợi dây đồng, độ suy hao, NEXT/FEXT.</li>
+                                            <li><b class="text-gray-800">Xác thực băng thông:</b> Cắm test trực tiếp lên Switch để xác thực tốc độ 1Gbps hay bị suy giảm xuống 100Mbps.</li>
+                                            <li><b class="text-gray-800">Bấm lại đầu mạng & Dán nhãn:</b> Thay thế đầu RJ45 hỏng và dán nhãn định danh 2 đầu cho toàn bộ port Voice, Data & Devices.</li>
+                                        </ul>
+                                    </td>
+                                    <td class="p-3 text-center align-top"><span class="font-bold text-indigo-700">INF, TSL</span><div class="text-[10px] text-gray-500">(02 KTV)</div></td>
+                                    <td class="p-3 text-[11px] text-gray-600 align-top"> Networks, máy in nhãn , kìm bấm mạng RJ45.</td>
+                                    <td class="p-3 text-[11px] text-gray-700 align-top font-medium">Báo cáo Pass/Fail, 100% line cáp dán nhãn, bảng Port Mapping.</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/80 transition">
+                                    <td class="p-3 text-center font-bold text-gray-500 align-top">2</td>
+                                    <td class="p-3 font-semibold text-gray-900 align-top">Thu thập & Kiểm toán Cấu hình Thiết bị Mạng</td>
+                                    <td class="p-3 align-top leading-relaxed text-[11px] text-gray-600">
+                                        <ul class="list-disc pl-4 space-y-1">
+                                            <li><b class="text-gray-800">Trích xuất cấu hình:</b> Đăng nhập Console/SSH xuất file backup config (.cfg/.txt) Core/Access Switch, Router, Firewall.</li>
+                                            <li><b class="text-gray-800">Phân tích Logic:</b> Rà soát VLAN, IP Schema, Routing table, Trunk/Uplink traffic và cơ chế dự phòng HA.</li>
+                                        </ul>
+                                    </td>
+                                    <td class="p-3 text-center align-top"><span class="font-bold text-indigo-700">CC, TSL</span><div class="text-[10px] text-gray-500">(01 Kỹ sư)</div></td>
+                                    <td class="p-3 text-[11px] text-gray-600 align-top">Cáp Console USB-RJ45/Type-C, SecureCRT, PuTTY, TFTP Server.</td>
+                                    <td class="p-3 text-[11px] text-gray-700 align-top font-medium">Bộ tệp tin Backup Configuration, Sơ đồ mạng vật lý & Logic cập nhật.</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/80 transition">
+                                    <td class="p-3 text-center font-bold text-gray-500 align-top">3</td>
+                                    <td class="p-3 font-semibold text-gray-900 align-top">Thu thập Cấu hình Hệ thống Server & SAN Storage</td>
+                                    <td class="p-3 align-top leading-relaxed text-[11px] text-gray-600">
+                                        <ul class="list-disc pl-4 space-y-1">
+                                            <li><b class="text-gray-800">Khảo sát Máy chủ:</b> Kiểm tra phần cứng, OS, network adapter, license và trạng thái bản vá.</li>
+                                            <li><b class="text-gray-800">Khảo sát SAN Storage:</b> Rà soát LUN, RAID pool, dung lượng khả dụng và hiệu năng I/O.</li>
+                                        </ul>
+                                    </td>
+                                    <td class="p-3 text-center align-top"><span class="font-bold text-indigo-700">SYS, TSL</span><div class="text-[10px] text-gray-500">(01 Kỹ sư)</div></td>
+                                    <td class="p-3 text-[11px] text-gray-600 align-top">Tool kiểm tra phần cứng & SAN Controller, script thu thập OS.</td>
+                                    <td class="p-3 text-[11px] text-gray-700 align-top font-medium">Bảng kiểm kê thông số Server/Storage, sơ đồ phân bổ dữ liệu.</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/80 transition">
+                                    <td class="p-3 text-center font-bold text-gray-500 align-top">4</td>
+                                    <td class="p-3 font-semibold text-gray-900 align-top">Thu thập & Đánh giá Cấu hình Camera Giám sát & PoE</td>
+                                    <td class="p-3 align-top leading-relaxed text-[11px] text-gray-600">
+                                        <ul class="list-disc pl-4 space-y-1">
+                                            <li>Quét toàn bộ IP/MAC Camera, NVR/DVR; kiểm tra công suất nguồn PoE trên từng port Switch và chính sách QoS ưu tiên video.</li>
+                                        </ul>
+                                    </td>
+                                    <td class="p-3 text-center align-top"><span class="font-bold text-indigo-700">CC, TSL</span><div class="text-[10px] text-gray-500">(01 Kỹ sư)</div></td>
+                                    <td class="p-3 text-[11px] text-gray-600 align-top">Advanced IP Scanner, Wireshark, PoE tester/Multimeter.</td>
+                                    <td class="p-3 text-[11px] text-gray-700 align-top font-medium">Bảng danh sách IP/MAC Camera & báo cáo cấu hình PoE/QoS.</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/80 transition">
+                                    <td class="p-3 text-center font-bold text-gray-500 align-top">5</td>
+                                    <td class="p-3 font-semibold text-gray-900 align-top">Khảo sát Sóng Wi-Fi & Đo kiểm Bản đồ nhiệt (Heatmap)</td>
+                                    <td class="p-3 align-top leading-relaxed text-[11px] text-gray-600">
+                                        <ul class="list-disc pl-4 space-y-1">
+                                            <li>Backup cấu hình Wi-Fi Controller; đo sóng Heatmap 2.4GHz/5GHz toàn văn phòng và xưởng; phân tích điểm chết (dead zone) và test Roaming.</li>
+                                        </ul>
+                                    </td>
+                                    <td class="p-3 text-center align-top"><span class="font-bold text-indigo-700">CC, TSL</span><div class="text-[10px] text-gray-500">(01 Kỹ sư)</div></td>
+                                    <td class="p-3 text-[11px] text-gray-600 align-top">Ekahau AI Pro / NetSpot, USB Wi-Fi Survey Adapter, layout scale.</td>
+                                    <td class="p-3 text-[11px] text-gray-700 align-top font-medium">File backup Wi-Fi, Bản đồ nhiệt Heatmap, báo cáo tối ưu sóng.</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/80 transition">
+                                    <td class="p-3 text-center font-bold text-gray-500 align-top">6</td>
+                                    <td class="p-3 font-semibold text-gray-900 align-top">Lắp đặt Thiết bị & Thiết lập Trạm Giám sát (NUC / Agent)</td>
+                                    <td class="p-3 align-top leading-relaxed text-[11px] text-gray-600">
+                                        <ul class="list-disc pl-4 space-y-1">
+                                            <li>Cố định NUC/PC (BIOS Always-on), cài OS và monitoring agent; cấu hình Trunk port, mở SNMP trên toàn thiết bị và kích hoạt Live Dashboard.</li>
+                                        </ul>
+                                    </td>
+                                    <td class="p-3 text-center align-top"><span class="font-bold text-indigo-700">CC, SYS</span><div class="text-[10px] text-gray-500">(02 Kỹ sư)</div></td>
+                                    <td class="p-3 text-[11px] text-gray-600 align-top">Mini PC NUC (Core i5/i7, 16GB RAM), USB Boot, Zabbix/PRTG.</td>
+                                    <td class="p-3 text-[11px] text-gray-700 align-top font-medium">Hệ thống giám sát vận hành 24/7 (Live Dashboard).</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50/80 transition bg-emerald-50/40">
+                                    <td class="p-3 text-center font-bold text-emerald-800 align-top">7</td>
+                                    <td class="p-3 font-bold text-emerald-950 align-top">Giám sát Vận hành 24/7 & Lập Báo cáo Tổng kết</td>
+                                    <td class="p-3 align-top leading-relaxed text-[11px] text-gray-700">
+                                        <ul class="list-disc pl-4 space-y-1">
+                                            <li>Theo dõi 24/7 tải CPU/RAM, băng thông Uplink, tỷ lệ rớt gói trong 15 ngày; phân tích điểm nghẽn và lập báo cáo đánh giá hiện trạng kèm họp bàn giao.</li>
+                                        </ul>
+                                    </td>
+                                    <td class="p-3 text-center align-top"><span class="font-bold text-emerald-800">CC, SYS, TSL</span><div class="text-[10px] text-gray-500">(NOC & PM)</div></td>
+                                    <td class="p-3 text-[11px] text-gray-600 align-top">Hệ thống phân tích log NetNam, bộ tài liệu hoàn công.</td>
+                                    <td class="p-3 text-[11px] text-emerald-900 align-top font-bold">BỘ BÁO CÁO TỔNG HỢP & ĐỀ XUẤT NÂNG CẤP (FINAL REPORT).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 3: PHÂN CÔNG NHÂN SỰ ON-SITE (07 KỸ SƯ) -->
+        <!-- ================================================================= -->
+        <section id="sec-staff" class="hidden flex-1 overflow-y-auto p-3 sm:p-6 max-w-6xl mx-auto w-full custom-scrollbar space-y-4 sm:space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-5">
+                <div class="border-b border-gray-200 pb-3 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                    <div>
+                        <span class="text-[10px] sm:text-xs font-bold text-indigo-600 uppercase bg-indigo-50 px-2.5 py-1 rounded-md">Module 3</span>
+                        <h3 class="text-base sm:text-xl font-bold text-gray-900 mt-1.5">Danh Sách & Phân Công Nhân Sự On-Site Chuyên Trách (06 Kỹ Sư)</h3>
+                    </div>
+                    <span class="self-start sm:self-auto bg-indigo-100 text-indigo-800 text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full border border-indigo-200">
+                        Thời gian On-site: 08/09 - 09/09/2026
+                    </span>
+                </div>
+
+                <div class="border border-gray-200 rounded-xl overflow-x-auto touch-scroll custom-scrollbar shadow-xs bg-white">
+                    <table class="w-full text-xs text-left min-w-[960px] divide-y divide-gray-200">
+                        <thead class="bg-gray-100/80 font-bold text-gray-700 text-[11px]">
+                            <tr>
+                                <th class="p-3 text-center w-12 shrink-0">STT</th>
+                                <th class="p-3 w-40">Phòng ban / Bộ phận</th>
+                                <th class="p-3 w-48">Vai trò / Vị trí</th>
+                                <th class="p-3 text-center w-16">Số lượng</th>
+                                <th class="p-3 min-w-[280px]">Nhiệm vụ & Phạm vi Công việc On-site</th>
+                                <th class="p-3 w-56">Trang thiết bị & Dụng cụ mang theo</th>
+                                <th class="p-3 w-44">Ghi chú</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 text-gray-700">
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-3 text-center font-bold text-gray-500 align-top">1</td>
+                                <td class="p-3 align-top"><span class="font-bold text-indigo-700">INF</span><div class="text-[10px] text-gray-500">Hạ tầng Mạng & Cáp</div></td>
+                                <td class="p-3 font-semibold text-gray-900 align-top">Kỹ thuật viên Hạ tầng cáp</td>
+                                <td class="p-3 text-center font-bold text-indigo-600 align-top">02</td>
+                                <td class="p-3 align-top leading-relaxed">
+                                    <ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-600">
+                                        <li>Kiểm tra, đo test tín hiệu toàn bộ cáp xưởng cũ.</li>
+                                        <li>Dán nhãn chuẩn hóa toàn bộ port mạng downlink.</li>
+                                        <li>Bấm lại đầu mạng hỏng và lập bảng Port Mapping vật lý.</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3 text-[11px] text-gray-600 align-top">Máy đo cáp , máy in nhãn bọc cáp , kìm bấm mạng, hạt Cat5e/Cat6.</td>
+                                <td class="p-3 text-[11px] text-amber-700 font-medium align-top">Ưu tiên khu vực xưởng cũ & máng cáp trên cao</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-3 text-center font-bold text-gray-500 align-top">2</td>
+                                <td class="p-3 align-top"><span class="font-bold text-indigo-700">CC</span><div class="text-[10px] text-gray-500">Hạ tầng Mạng & Wi-Fi</div></td>
+                                <td class="p-3 font-semibold text-gray-900 align-top">Kỹ sư Mạng & Wi-Fi<div class="text-[10px] text-indigo-600 font-medium">(Chuyên trách Heatmap)</div></td>
+                                <td class="p-3 text-center font-bold text-indigo-600 align-top">01</td>
+                                <td class="p-3 align-top leading-relaxed">
+                                    <ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-600">
+                                        <li>Đo kiểm bản đồ nhiệt (Wi-Fi Heatmap Survey) toàn bộ xưởng và văn phòng.</li>
+                                        <li>Xác định vùng chết sóng, phân tích nhiễu kênh & test Roaming.</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3 text-[11px] text-gray-600 align-top">Laptop/Tablet cài Ekahau/NetSpot, Adapter thu sóng Wi-Fi chuyên dụng, sơ đồ mặt bằng.</td>
+                                <td class="p-3 text-[11px] text-gray-600 align-top">Phối hợp di chuyển đo toàn bộ mặt bằng xưởng/VP</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-3 text-center font-bold text-gray-500 align-top">3</td>
+                                <td class="p-3 align-top"><span class="font-bold text-indigo-700">CC</span><div class="text-[10px] text-gray-500">Hạ tầng Mạng & Wi-Fi</div></td>
+                                <td class="p-3 font-semibold text-gray-900 align-top">Kỹ sư Mạng & Wi-Fi<div class="text-[10px] text-indigo-600 font-medium">(Thu thập Config & Monitor)</div></td>
+                                <td class="p-3 text-center font-bold text-indigo-600 align-top">01</td>
+                                <td class="p-3 align-top leading-relaxed">
+                                    <ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-600">
+                                        <li>Login thu thập cấu hình Switch, Router, Firewall (VLAN, IP Plan, HA).</li>
+                                        <li>Thu thập thông số IP/MAC Camera, Switch PoE & cấu hình QoS.</li>
+                                        <li>Phối hợp cấu hình NUC/PC, Trunk port và mở SNMP.</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3 text-[11px] text-gray-600 align-top">Cáp Console đa năng (USB-RJ45/Type-C), Laptop kỹ thuật (SecureCRT, Wireshark).</td>
+                                <td class="p-3 text-[11px] text-red-700 font-medium align-top">Cần tài khoản Admin/Read-only thiết bị mạng</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-3 text-center font-bold text-gray-500 align-top">4</td>
+                                <td class="p-3 align-top"><span class="font-bold text-indigo-700">SYS</span><div class="text-[10px] text-gray-500">Hệ thống & Máy chủ</div></td>
+                                <td class="p-3 font-semibold text-gray-900 align-top">Kỹ sư Hệ thống Máy chủ (System)</td>
+                                <td class="p-3 text-center font-bold text-indigo-600 align-top">01</td>
+                                <td class="p-3 align-top leading-relaxed">
+                                    <ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-600">
+                                        <li>Ghi nhận thông số phần cứng Server, OS, network adapter, license.</li>
+                                        <li>Thu thập cấu hình SAN Storage, phân chia LUN và RAID.</li>
+                                        <li>Cài đặt OS và Monitoring Agent lên thiết bị NUC/PC.</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3 text-[11px] text-gray-600 align-top">USB Boot cứu hộ, bộ Offline installer Agent/OS, tool kiểm tra phần cứng & SAN.</td>
+                                <td class="p-3 text-[11px] text-red-700 font-medium align-top">Cần quyền truy cập cụm Server & Storage SAN</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-3 text-center font-bold text-gray-500 align-top">5</td>
+                                <td class="p-3 align-top"><span class="font-bold text-indigo-700">TSL / PM</span><div class="text-[10px] text-gray-500">Quản lý & Giải pháp</div></td>
+                                <td class="p-3 font-semibold text-gray-900 align-top">Quản lý Dự án & Lead Giải pháp</td>
+                                <td class="p-3 text-center font-bold text-indigo-600 align-top">02</td>
+                                <td class="p-3 align-top leading-relaxed">
+                                    <ul class="list-disc pl-4 space-y-1 text-[11px] text-gray-600">
+                                        <li>Trưởng đoàn On-site, điều phối chung và làm việc trực tiếp với khách hàng.</li>
+                                        <li>Hỗ trợ điều phối các phòng ban (INF, CC, SYS) tại thực địa.</li>
+                                        <li>Tiếp nhận bàn giao dữ liệu, đánh giá hiện trạng và lập báo cáo kỹ thuật.</li>
+                                    </ul>
+                                </td>
+                                <td class="p-3 text-[11px] text-gray-600 align-top">Hồ sơ dự án, biểu mẫu khảo sát thực địa, biên bản xác nhận công việc on-site.</td>
+                                <td class="p-3 text-[11px] text-indigo-700 font-medium align-top">Đầu mối chính & Chịu trách nhiệm báo cáo tổng hợp</td>
+                            </tr>
+                        </tbody>
+                        <tfoot class="bg-indigo-50/60 font-bold border-t-2 border-indigo-200 text-indigo-950">
+                            <tr>
+                                <td colspan="3" class="p-3 text-center uppercase tracking-wide text-xs">Tổng Cộng Nhân Sự On-Site</td>
+                                <td class="p-3 text-center text-sm font-black text-indigo-700">07</td>
+                                <td colspan="3" class="p-3 text-xs text-gray-700 font-normal">
+                                    <b>06 Kỹ sư chuyên trách toàn diện</b> các mảng Hạ tầng cáp, Network, Wi-Fi Heatmap, Server & Quản trị Dự án.
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 4: SẢN PHẨM GIAO NỘP & HỒ SƠ NGHIỆM THU (DELIVERABLES) -->
+        <!-- ================================================================= -->
+        <section id="sec-deliver" class="hidden flex-1 overflow-y-auto p-3 sm:p-6 max-w-6xl mx-auto w-full custom-scrollbar space-y-4 sm:space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-5">
+                <div class="border-b border-gray-200 pb-3 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                    <div>
+                        <span class="text-[10px] sm:text-xs font-bold text-emerald-600 uppercase bg-emerald-50 px-2.5 py-1 rounded-md">Module 4</span>
+                        <h3 class="text-base sm:text-xl font-bold text-gray-900 mt-1.5">Danh Mục Sản Phẩm Giao Nộp & Tiêu Chuẩn Nghiệm Thu (Deliverables Matrix)</h3>
+                    </div>
+                    <span class="self-start sm:self-auto bg-emerald-100 text-emerald-800 text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full border border-emerald-200">
+                        09 Sản phẩm bàn giao
+                    </span>
+                </div>
+
+                <div class="border border-gray-200 rounded-xl overflow-x-auto touch-scroll custom-scrollbar shadow-xs bg-white">
+                    <table class="w-full text-xs text-left min-w-[850px] divide-y divide-gray-200">
+                        <thead class="bg-gray-100 font-bold text-gray-700 text-[11px]">
+                            <tr>
+                                <th class="p-3 text-center w-12 shrink-0">STT</th>
+                                <th class="p-3 w-32">Hạng mục SOW</th>
+                                <th class="p-3 w-56">Tên Sản phẩm Giao nộp</th>
+                                <th class="p-3 min-w-[260px]">Mô tả Chi tiết Nội dung</th>
+                                <th class="p-3 text-center w-28">Định dạng</th>
+                                <th class="p-3 text-center w-28">Thời điểm</th>
+                                <th class="p-3 min-w-[200px]">Tiêu chuẩn Nghiệm thu</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 text-gray-700">
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-3 text-center font-bold text-gray-500">1</td>
+                                <td class="p-3 font-semibold text-gray-900">Hạng mục 1</td>
+                                <td class="p-3 font-bold text-indigo-700">Báo cáo kiểm tra chất lượng cáp & Bảng Mapping Port</td>
+                                <td class="p-3 text-gray-600">Bảng báo cáo chất lượng cáp và bảng mapping port.</td>
+                                <td class="p-3 text-center font-medium text-gray-600">Excel / PDF</td>
+                                <td class="p-3 text-center font-bold text-blue-600">22/09/2026</td>
+                                <td class="p-3 text-emerald-800">100% các line cáp được đo kiểm và có kết quả rõ ràng.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-3 text-center font-bold text-gray-500">2</td>
+                                <td class="p-3 font-semibold text-gray-900">Hạng mục 1</td>
+                                <td class="p-3 font-bold text-indigo-700">Hệ thống nhãn định danh cáp mạng tại xưởng cũ</td>
+                                <td class="p-3 text-gray-600">Dán nhãn chuẩn hóa tại 2 đầu cáp (đầu Switch và đầu node mạng người dùng/máy móc).</td>
+                                <td class="p-3 text-center font-medium text-gray-600">Hiện vật On-site</td>
+                                <td class="p-3 text-center font-bold text-blue-600">09/09/2026</td>
+                                <td class="p-3 text-emerald-800">Nhãn in chuẩn kỹ thuật, bám dính chắc, đúng quy chuẩn mã hóa.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-3 text-center font-bold text-gray-500">3</td>
+                                <td class="p-3 font-semibold text-gray-900">Hạng mục 2</td>
+                                <td class="p-3 font-bold text-indigo-700">Sơ đồ mạng vật lý & Logic cập nhật</td>
+                                <td class="p-3 text-gray-600">Sơ đồ chi tiết phân bổ Switch/Router/Firewall, phân chia VLAN, dải IP Schema, định tuyến Routing, băng thông Uplink và HA.</td>
+                                <td class="p-3 text-center font-medium text-gray-600">Visio / PDF</td>
+                                <td class="p-3 text-center font-bold text-blue-600">22/09/2026</td>
+                                <td class="p-3 text-emerald-800">Phản ánh chính xác 100% cấu hình thực tế trên thiết bị.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-3 text-center font-bold text-gray-500">4</td>
+                                <td class="p-3 font-semibold text-gray-900">Hạng mục 3</td>
+                                <td class="p-3 font-bold text-indigo-700">Bảng kiểm kê Server/Storage & Sơ đồ phân bổ dữ liệu</td>
+                                <td class="p-3 text-gray-600">Bảng thông số chi tiết CPU/RAM/OS/Disk của các cụm Server, cấu hình LUN/RAID trên SAN Storage.</td>
+                                <td class="p-3 text-center font-medium text-gray-600">Excel / PDF</td>
+                                <td class="p-3 text-center font-bold text-blue-600">22/09/2026</td>
+                                <td class="p-3 text-emerald-800">Đầy đủ thông số kỹ thuật, bản quyền và trạng thái cập nhật.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-3 text-center font-bold text-gray-500">5</td>
+                                <td class="p-3 font-semibold text-gray-900">Hạng mục 4</td>
+                                <td class="p-3 font-bold text-indigo-700">Danh sách IP/MAC Camera & Báo cáo cấu hình PoE/QoS</td>
+                                <td class="p-3 text-gray-600">Bảng kê IP, MAC, Switch port kết nối Camera; Phân tích công suất nguồn PoE và cấu hình QoS ưu tiên lưu lượng.</td>
+                                <td class="p-3 text-center font-medium text-gray-600">Excel / PDF</td>
+                                <td class="p-3 text-center font-bold text-blue-600">22/09/2026</td>
+                                <td class="p-3 text-emerald-800">Khớp với toàn bộ số lượng Camera thực tế đang kết nối.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-3 text-center font-bold text-gray-500">6</td>
+                                <td class="p-3 font-semibold text-gray-900">Hạng mục 5</td>
+                                <td class="p-3 font-bold text-indigo-700">Bản đồ nhiệt sóng Wi-Fi (Heatmap) & Báo cáo tối ưu</td>
+                                <td class="p-3 text-gray-600">Bản đồ vùng phủ sóng trên layout xưởng/văn phòng, danh sách điểm chết sóng (dead zone), phân tích nhiễu kênh & đề xuất.</td>
+                                <td class="p-3 text-center font-medium text-gray-600">PDF / Image</td>
+                                <td class="p-3 text-center font-bold text-blue-600">22/09/2026</td>
+                                <td class="p-3 text-emerald-800">Đo kiểm thực tế bằng phần mềm chuyên dụng (Ekahau/NetSpot).</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-3 text-center font-bold text-gray-500">7</td>
+                                <td class="p-3 font-semibold text-gray-900">Hạng mục 2, 5</td>
+                                <td class="p-3 font-bold text-indigo-700">Tệp sao lưu cấu hình thiết bị (Backup Configuration)</td>
+                                <td class="p-3 text-gray-600">Tệp sao lưu cấu hình của toàn bộ Switch, Router, Firewall, Wi-Fi Controller tại thời điểm khảo sát.</td>
+                                <td class="p-3 text-center font-medium text-gray-600">Config (.cfg/.txt/ZIP)</td>
+                                <td class="p-3 text-center font-bold text-blue-600">22/09/2026</td>
+                                <td class="p-3 text-emerald-800">Được phân loại theo thư mục và có thể restore khi cần.</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-3 text-center font-bold text-gray-500">8</td>
+                                <td class="p-3 font-semibold text-gray-900">Hạng mục 6</td>
+                                <td class="p-3 font-bold text-indigo-700">Hệ thống Giám sát Vận hành (Live Dashboard)</td>
+                                <td class="p-3 text-gray-600">Dashboard theo dõi thời gian thực các thông số SNMP, traffic mạng, trạng thái Up/Down của thiết bị trên NUC/PC.</td>
+                                <td class="p-3 text-center font-medium text-gray-600">Live Dashboard</td>
+                                <td class="p-3 text-center font-bold text-blue-600">09/09/2026</td>
+                                <td class="p-3 text-emerald-800">Hệ thống thu thập dữ liệu ổn định, hiển thị thông số 24/7.</td>
+                            </tr>
+                            <tr class="hover:bg-emerald-50/70 transition bg-emerald-50/40">
+                                <td class="p-3 text-center font-bold text-emerald-800">9</td>
+                                <td class="p-3 font-bold text-emerald-950">Hạng mục 7</td>
+                                <td class="p-3 font-black text-emerald-950">BỘ BÁO CÁO TỔNG HỢP TÌNH TRẠNG HỆ THỐNG & ĐỀ XUẤT TỐI ƯU</td>
+                                <td class="p-3 text-gray-700">Báo cáo phân tích tổng thể hiệu năng hạ tầng sau 15 ngày theo dõi, chỉ ra các lỗi tiềm ẩn, điểm nghẽn và phương án nâng cấp.</td>
+                                <td class="p-3 text-center font-bold text-emerald-800">PDF / Word</td>
+                                <td class="p-3 text-center font-black text-emerald-900">22/09/2026</td>
+                                <td class="p-3 text-emerald-900 font-bold">Báo cáo đầy đủ, có số liệu/biểu đồ minh chứng và đánh giá chuyên gia.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 2: GIẢI PHÁP ĐỀ XUẤT & BOM -->
+        <!-- ================================================================= -->
+        <section id="sec-sol" class="hidden flex-1 overflow-y-auto p-3 sm:p-6 max-w-6xl mx-auto w-full custom-scrollbar space-y-4 sm:space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-4 sm:space-y-6">
+                <div class="border-b border-gray-200 pb-3 sm:pb-4">
+                    <span class="text-[10px] sm:text-xs font-bold text-purple-600 uppercase bg-purple-50 px-2.5 py-1 rounded-md">Module 2</span>
+                    <h3 class="text-base sm:text-xl font-bold text-gray-900 mt-1.5 sm:mt-2">Phương Án Đề Xuất Đánh Giá Hiện Trạng & Bảng BoM Thiết Bị</h3>
+                </div>
+
+                <!-- 4.1 KIẾN TRÚC & QUY TRÌNH THỰC HIỆN -->
+                <div class="p-3.5 sm:p-4 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-950 space-y-2.5">
+                    <h4 class="font-bold text-xs sm:text-sm flex items-center gap-2">
+                        <span>🏛️</span> Quy Trình Đo Kiểm Kỹ Thuật Chuyên Sâu
+                    </h4>
+                    <p class="text-xs text-indigo-900 leading-relaxed">
+                        Quy trình kiểm tra chất lượng cáp vật lý: Kỹ thuật viên INF dùng máy đo chuyên dụng  đo thông mạch, kiểm tra đủ kết nối của 8 lõi trong dây cáp mạng RJ45. Trường hợp lỗi sẽ tiến hành bấm lại đầu hạt mạng RJ45 và đo lại. Sau khi đạt chuẩn, cắm thiết bị vào cổng Switch để đo kiểm thực tế tốc độ đạt 1Gbps hay 100Mbps.
+                    </p>
+                </div>
+
+                <!-- 4.2 BẢNG BOM TRANG THIẾT BỊ ĐO KIỂM & PHẦN CỨNG -->
+                <div class="space-y-2">
+                    <h4 class="font-bold text-gray-900 text-xs sm:text-sm flex items-center gap-2">
+                        <span>📑</span> Bảng Định Mức Thiết Bị Đo Kiểm, Dụng Cụ & Hệ Thống Giám Sát (BoM)
+                    </h4>
+                    <div class="border border-gray-200 rounded-xl overflow-x-auto touch-scroll custom-scrollbar shadow-xs">
+                        <table class="w-full text-xs text-left min-w-[500px]">
+                            <thead class="bg-gray-100 font-bold text-gray-700 border-b">
+                                <tr>
+                                    <th class="p-2.5 sm:p-3">Hạng mục Thiết bị</th>
+                                    <th class="p-2.5 sm:p-3">Quy cách & Thông số Kỹ thuật Chuẩn</th>
+                                    <th class="p-2.5 sm:p-3 text-center">ĐVT</th>
+                                    <th class="p-2.5 sm:p-3 text-center">Số lượng</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 sm:p-3 font-semibold text-gray-900">Máy đo cáp - Máy test cáp</td>
+                                    <td class="p-2.5 sm:p-3 text-gray-600">Đo kiểm tra cáp mạng Đồng/Quang, wiremap 8 sợi, băng thông đạt 1Gbps hay chưa</td>
+                                    <td class="p-2.5 sm:p-3 text-center text-gray-500">Bộ</td>
+                                    <td class="p-2.5 sm:p-3 text-center font-bold text-indigo-600">01</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 sm:p-3 font-semibold text-gray-900">Máy in nhãn bọc cáp Brother / Dymo</td>
+                                    <td class="p-2.5 sm:p-3 text-gray-600">Máy in di động, băng nhãn dán bọc cáp, bám dính cao</td>
+                                    <td class="p-2.5 sm:p-3 text-center text-gray-500">Máy + Cuộn</td>
+                                    <td class="p-2.5 sm:p-3 text-center font-bold text-indigo-600">01 + 03</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 sm:p-3 font-semibold text-gray-900">Bộ công cụ đo Wi-Fi Heatmap Survey</td>
+                                    <td class="p-2.5 sm:p-3 text-gray-600">Phần mềm bản quyền Ekahau AI Pro / NetSpot, kèm Adapter thu sóng Wi-Fi chuyên dụng</td>
+                                    <td class="p-2.5 sm:p-3 text-center text-gray-500">Gói</td>
+                                    <td class="p-2.5 sm:p-3 text-center font-bold text-indigo-600">01</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 sm:p-3 font-semibold text-gray-900">Thiết bị NUC / Mini PC Giám Sát</td>
+                                    <td class="p-2.5 sm:p-3 text-gray-600">Thiết bị NUC hỗ trợ 2 port mạng tích hợp tính năng WIFI, được cài đặt phần mềm Agent giám sát</td>
+                                    <td class="p-2.5 sm:p-3 text-center text-gray-500">Bộ</td>
+                                    <td class="p-2.5 sm:p-3 text-center font-bold text-indigo-600">01</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 sm:p-3 font-semibold text-gray-900">Dụng cụ bấm mạng & Cáp Console đa năng</td>
+                                    <td class="p-2.5 sm:p-3 text-gray-600">Kìm bấm mạng, hạt RJ45 chống nhiễu, 02 cáp Console USB-RJ45/Type-C kết nối Switch</td>
+                                    <td class="p-2.5 sm:p-3 text-center text-gray-500">Gói</td>
+                                    <td class="p-2.5 sm:p-3 text-center font-bold text-indigo-600">01</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 sm:p-3 font-semibold text-gray-900">Gói Dịch vụ Đánh giá Hiện trạng & Giám sát 24/7</td>
+                                    <td class="p-2.5 sm:p-3 text-gray-600">06 Kỹ sư On-site ngày D1-D2, Team NOC giám sát 24/7 trong 15 ngày & Bàn giao hồ sơ</td>
+                                    <td class="p-2.5 sm:p-3 text-center text-gray-500">Gói</td>
+                                    <td class="p-2.5 sm:p-3 text-center font-bold text-indigo-600">01 HĐ</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 5: YÊU CẦU CHUẨN BỊ (NETNAM & KHÁCH HÀNG PHỐI HỢP) -->
+        <!-- ================================================================= -->
+        <section id="sec-prep" class="hidden flex-1 overflow-y-auto p-3 sm:p-6 max-w-6xl mx-auto w-full custom-scrollbar space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-6">
+                
+                <div class="border-b pb-3 flex flex-col sm:flex-row justify-between sm:items-center gap-2">
+                    <div>
+                        <span class="text-xs font-bold text-amber-600 uppercase bg-amber-50 px-2.5 py-1 rounded-md">Module 5</span>
+                        <h3 class="text-base sm:text-xl font-bold text-gray-900 mt-1.5">Danh Mục Công Tác Chuẩn Bị Trước Khi On-Site</h3>
+                    </div>
+                    <span class="bg-amber-100 text-amber-900 text-xs font-bold px-3 py-1 rounded-full">Phối hợp hai bên</span>
+                </div>
+
+                <!-- PHẦN 1: NETNAM CẦN CHUẨN BỊ -->
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2 border-b border-indigo-100 pb-2">
+                        <span class="w-7 h-7 bg-indigo-600 text-white rounded-lg flex items-center justify-center text-xs font-bold">A</span>
+                        <h4 class="font-bold text-indigo-950 text-xs sm:text-sm">Trách Nhiệm & Trang Thiết Bị NetNam Cần Chuẩn Bị</h4>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-xl overflow-x-auto touch-scroll custom-scrollbar shadow-xs">
+                        <table class="w-full text-xs text-left min-w-[650px]">
+                            <thead class="bg-gray-100 font-bold text-gray-700 border-b">
+                                <tr>
+                                    <th class="p-2.5 text-center w-12">STT</th>
+                                    <th class="p-2.5 w-44">Nhóm Hạng mục</th>
+                                    <th class="p-2.5 min-w-[200px]">Nội dung Chuẩn bị / Thiết bị</th>
+                                    <th class="p-2.5 min-w-[240px]">Chi tiết Kỹ thuật / Quy cách</th>
+                                    <th class="p-2.5 text-center w-24">Bộ phận</th>
+                                    <th class="p-2.5 text-center w-28">Hạn hoàn thành</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 text-gray-700">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">1.1</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Thủ tục Vào Cổng</td>
+                                    <td class="p-2.5">Đăng ký danh sách nhân sự On-site & Giấy tờ tùy thân</td>
+                                    <td class="p-2.5 text-gray-600">Danh sách họ tên, CCCD, số điện thoại toàn bộ 06 kỹ thuật viên; Giấy giới thiệu công tác NetNam.</td>
+                                    <td class="p-2.5 text-center font-bold text-indigo-600">PM / HR</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 04/09</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">1.2</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Thủ tục Thiết bị</td>
+                                    <td class="p-2.5">Kê khai danh mục thiết bị, máy móc mang vào (Gate Pass)</td>
+                                    <td class="p-2.5 text-gray-600">Kê khai số serial, model máy đo , máy in nhãn, laptop kỹ thuật, NUC đăng ký với An ninh nhà máy.</td>
+                                    <td class="p-2.5 text-center font-bold text-indigo-600">TSL / PM</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 05/09</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">1.3</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Bảo hộ Lao động (PPE)</td>
+                                    <td class="p-2.5">Trang bị đầy đủ An toàn Lao động (HSE)</td>
+                                    <td class="p-2.5 text-gray-600">Mũ bảo hộ cứng, giày bảo hộ mũi thép chống trượt, áo phản quang, găng tay bảo hộ cho 100% nhân sự.</td>
+                                    <td class="p-2.5 text-center font-bold text-indigo-600">INF / TSL</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 05/09</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">2.1</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Máy Đo Kiểm Cáp</td>
+                                    <td class="p-2.5">Máy đo kiểm tra cáp mạng  Networks chuyên dụng</td>
+                                    <td class="p-2.5 text-gray-600">Kiểm tra pin, sạc đầy đủ, hiệu chuẩn (Calibration), chuẩn bị module đo Cat5e/Cat6, test suy hao, wiremap 8 sợi.</td>
+                                    <td class="p-2.5 text-center font-bold text-indigo-600">INF</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 05/09</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">2.2</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Máy In Nhãn Cáp</td>
+                                    <td class="p-2.5">Máy in nhãn chuyên dụng & cuộn băng nhãn bọc cáp</td>
+                                    <td class="p-2.5 text-gray-600">Máy in , cuộn nhãn dán bọc cáp chuyên dụng, pin dự phòng.</td>
+                                    <td class="p-2.5 text-center font-bold text-indigo-600">INF</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 05/09</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">3.1</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Wi-Fi Heatmap Survey</td>
+                                    <td class="p-2.5">Thiết bị & Phần mềm đo bản đồ nhiệt</td>
+                                    <td class="p-2.5 text-gray-600">Laptop/Tablet cài Ekahau AI Pro</td>
+                                    <td class="p-2.5 text-center font-bold text-indigo-600">CC / TSL</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 05/09</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">4.1</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Thiết Bị NUC Giám Sát</td>
+                                    <td class="p-2.5">Phần cứng Mini PC NUC & Gói Agent giám sát</td>
+                                    <td class="p-2.5 text-gray-600">Thiết bị NUC hỗ trợ 2 port mạng tích hợp tính năng WIFI, Đóng gói sẵn OS Ubuntu, Agent monitoring.</td>
+                                    <td class="p-2.5 text-center font-bold text-indigo-600">SYS</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 06/09</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- PHẦN 2: KHÁCH HÀNG TCB BALL CẦN PHỐI HỢP -->
+                <div class="space-y-3 pt-2">
+                    <div class="flex items-center gap-2 border-b border-emerald-100 pb-2">
+                        <span class="w-7 h-7 bg-emerald-600 text-white rounded-lg flex items-center justify-center text-xs font-bold">B</span>
+                        <h4 class="font-bold text-emerald-950 text-xs sm:text-sm">Thông Tin & Hạ Tầng Khách Hàng (TCB Ball) Cần Phối Hợp Cung Cấp</h4>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-xl overflow-x-auto touch-scroll custom-scrollbar shadow-xs">
+                        <table class="w-full text-xs text-left min-w-[650px]">
+                            <thead class="bg-gray-100 font-bold text-gray-700 border-b">
+                                <tr>
+                                    <th class="p-2.5 text-center w-12">STT</th>
+                                    <th class="p-2.5 w-44">Hạng mục Phối hợp</th>
+                                    <th class="p-2.5 min-w-[280px]">Nội dung Yêu cầu Khách hàng Cung cấp</th>
+                                    <th class="p-2.5 text-center w-28">Thời hạn</th>
+                                    <th class="p-2.5 text-center w-28">Đơn vị</th>
+                                    <th class="p-2.5 text-center w-32">Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 text-gray-700">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">1</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Mặt bằng & Tiếp cận</td>
+                                    <td class="p-2.5 text-gray-600">Cung cấp sơ đồ mặt bằng xưởng/văn phòng (PDF hoặc AutoCAD) và hỗ trợ tiếp cận các máng cáp cao, phòng Server.</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 07/09</td>
+                                    <td class="p-2.5 text-center font-bold text-emerald-700">TCB Ball</td>
+                                    <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">✓ Hoàn thành</span></td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">2</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Hạ tầng Cáp</td>
+                                    <td class="p-2.5 text-gray-600">Cung cấp thông tin số lượng node mạng cụ thể và khu vực xưởng cũ cần đo kiểm.</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 07/09</td>
+                                    <td class="p-2.5 text-center font-bold text-emerald-700">TCB Ball</td>
+                                    <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Chờ tiếp nhận</span></td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">3</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Thiết bị Mạng</td>
+                                    <td class="p-2.5 text-gray-600">Cung cấp danh sách thiết bị mạng (Switch, Router, Firewall), cấp quyền login/mật khẩu để trích xuất cấu hình, VLAN, IP Plan, Uplink.</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 07/09</td>
+                                    <td class="p-2.5 text-center font-bold text-emerald-700">TCB Ball</td>
+                                    <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Chờ tiếp nhận</span></td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">4</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Server & Storage</td>
+                                    <td class="p-2.5 text-gray-600">Cung cấp danh sách cụm Server và SAN Storage, cấp quyền kiểm tra thông số phần cứng, license, trạng thái OS updates.</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 07/09</td>
+                                    <td class="p-2.5 text-center font-bold text-emerald-700">TCB Ball</td>
+                                    <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Chờ tiếp nhận</span></td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">5</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Camera & NVR</td>
+                                    <td class="p-2.5 text-gray-600">Cung cấp danh sách Camera, Đầu ghi (NVR/DVR), Switch PoE để kiểm tra thông số IP/MAC, công suất PoE.</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 08/09</td>
+                                    <td class="p-2.5 text-center font-bold text-emerald-700">TCB Ball</td>
+                                    <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Chờ tiếp nhận</span></td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">6</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Hạ tầng Wi-Fi</td>
+                                    <td class="p-2.5 text-gray-600">Cung cấp danh sách SSID, mật khẩu và quyền truy cập Wi-Fi Controller để phục vụ đo kiểm Heatmap và test Roaming.</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 08/09</td>
+                                    <td class="p-2.5 text-center font-bold text-emerald-700">TCB Ball</td>
+                                    <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Chờ tiếp nhận</span></td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">7</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Thiết bị Giám sát (PC)</td>
+                                    <td class="p-2.5 text-gray-600">Cung cấp vị trí lắp đặt có nguồn điện và node mạng LAN; cấu hình mở SNMP trên toàn bộ các thiết bị cần monitor.</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 08/09</td>
+                                    <td class="p-2.5 text-center font-bold text-emerald-700">TCB Ball</td>
+                                    <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Chờ tiếp nhận</span></td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-2.5 text-center font-bold text-gray-500">8</td>
+                                    <td class="p-2.5 font-semibold text-gray-900">Đầu mối Liên hệ (POC)</td>
+                                    <td class="p-2.5 text-gray-600">Chỉ định 01 cán bộ IT nội bộ phụ trách phối hợp và hỗ trợ kỹ thuật trong suốt 15 ngày triển khai dự án.</td>
+                                    <td class="p-2.5 text-center text-gray-600">Trước 07/09</td>
+                                    <td class="p-2.5 text-center font-bold text-emerald-700">TCB Ball</td>
+                                    <td class="p-2.5 text-center"><span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">Chờ tiếp nhận</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================= -->
+        <!-- MODULE 6: TIẾN ĐỘ DỰ ÁN THEO KẾ HOẠCH (REAL-TIME TRACKER) -->
+        <!-- ================================================================= -->
+        <section id="sec-timeline" class="hidden flex-1 overflow-y-auto p-3 sm:p-6 max-w-7xl mx-auto w-full custom-scrollbar space-y-5">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 space-y-5">
+                
+                <!-- HEADER & REAL-TIME SENSOR -->
+                <div class="border-b pb-4 flex flex-col md:flex-row justify-between md:items-center gap-3">
+                    <div>
+                        <span class="text-xs font-bold text-indigo-600 uppercase bg-indigo-50 px-2.5 py-1 rounded-md">Module 6</span>
+                        <h3 class="text-base sm:text-xl font-bold text-gray-900 mt-1.5">Tiến Độ Dự Án Theo Kế Hoạch (Real-Time Tracker)</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Thời gian dự án: 08/09/2026 - 22/09/2026 (15 Ngày liên tục)</p>
+                    </div>
+                    
+                    <!-- REAL-TIME STATUS BADGE -->
+                    <div class="bg-slate-900 text-white p-3 rounded-xl flex items-center gap-3 shadow-md">
+                        <div class="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center text-lg font-bold">
+                            ⏱️
+                        </div>
+                        <div>
+                            <div class="text-[10px] text-gray-400 uppercase font-semibold">Thời gian hệ thống thực tế</div>
+                            <div id="realtime-clock" class="text-xs sm:text-sm font-bold text-emerald-400 font-mono">Đang tải ngày...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SELECTOR MÔ PHỎNG NGÀY -->
+                <div class="p-3.5 bg-indigo-50/70 rounded-xl border border-indigo-200">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-2.5">
+                        <div class="text-xs font-bold text-indigo-950 flex items-center gap-1.5">
+                            <span>🎮</span> <span>Bộ chọn ngày xem tiến độ:</span>
+                        </div>
+                        <button onclick="resetToRealtimeDate()" class="text-[11px] bg-white border border-indigo-300 text-indigo-700 px-2.5 py-1 rounded-lg font-bold hover:bg-indigo-100 transition self-start sm:self-auto">
+                            🔄 Quay về ngày Thực tế hiện tại
+                        </button>
+                    </div>
+
+                    <!-- NÚT 15 NGÀY (D1 - D15) -->
+                    <div id="timeline-day-buttons" class="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-15 gap-1.5 text-center text-xs"></div>
+                </div>
+
+                <!-- CARD: MÔ TẢ CHI TIẾT CÔNG VIỆC TRONG NGÀY ĐANG CHỌN -->
+                <div id="selected-day-details-card" class="p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 shadow-sm transition-all duration-300"></div>
+
+                <!-- BẢNG GANTT TIẾN ĐỘ 15 NGÀY (08/09 - 22/09/2026) -->
+                <div class="space-y-2">
+                    <h4 class="font-bold text-gray-900 text-xs sm:text-sm flex items-center gap-2">
+                        <span>📊</span> Ma Trận Kế Hoạch Triển Khai 15 Ngày (Project Timeline Matrix)
+                    </h4>
+                    
+                    <div class="border border-gray-200 rounded-xl overflow-x-auto touch-scroll custom-scrollbar shadow-xs">
+                        <table id="gantt-matrix-table" class="w-full text-xs text-left min-w-[980px]">
+                            <thead class="bg-gray-100 font-bold text-gray-700 border-b text-[11px]">
+                                <tr>
+                                    <th class="p-2.5 text-center w-10 sticky left-0 bg-gray-100 z-10">STT</th>
+                                    <th class="p-2.5 min-w-[200px] sticky left-10 bg-gray-100 z-10 border-r">Hạng mục Công việc</th>
+                                    <th class="p-2.5 text-center w-16">Nhân lực</th>
+                                    <!-- 15 CỘT TỪ D1 (08/09) ĐẾN D15 (22/09) -->
+                                    <th class="p-1.5 text-center w-11 day-col-1">D1<br><span class="text-[9px] font-normal">08/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-2">D2<br><span class="text-[9px] font-normal">09/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-3">D3<br><span class="text-[9px] font-normal">10/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-4">D4<br><span class="text-[9px] font-normal">11/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-5">D5<br><span class="text-[9px] font-normal">12/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-6">D6<br><span class="text-[9px] font-normal">13/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-7">D7<br><span class="text-[9px] font-normal">14/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-8">D8<br><span class="text-[9px] font-normal">15/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-9">D9<br><span class="text-[9px] font-normal">16/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-10">D10<br><span class="text-[9px] font-normal">17/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-11">D11<br><span class="text-[9px] font-normal">18/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-12">D12<br><span class="text-[9px] font-normal">19/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-13">D13<br><span class="text-[9px] font-normal">20/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-14">D14<br><span class="text-[9px] font-normal">21/09</span></th>
+                                    <th class="p-1.5 text-center w-11 day-col-15">D15<br><span class="text-[9px] font-normal">22/09</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="gantt-tbody" class="divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- CHÚ THÍCH MÀU SẮC -->
+                <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-gray-600 flex flex-wrap gap-4 items-center">
+                    <span class="font-bold text-gray-700">Quy ước hiển thị:</span>
+                    <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-amber-500 inline-block text-white text-[10px] text-center font-bold leading-3">■</span> Khảo sát On-site & Setup (08 - 09/09)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-blue-600 inline-block text-white text-[10px] text-center font-bold leading-3">■</span> Giám sát vận hành 24/7 (10 - 21/09)</div>
+                    <div class="flex items-center gap-1.5"><span class="w-3.5 h-3.5 rounded bg-emerald-600 inline-block text-white text-[10px] text-center font-bold leading-3">★</span> Báo cáo & Bàn giao (21 - 22/09)</div>
+                    <div class="flex items-center gap-1.5"><span class="px-1.5 py-0.5 rounded bg-amber-200 text-amber-900 font-bold">Hôm nay</span> Ngày đang chọn / Ngày thực tế</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- SCRIPT ENGINE -->
+    <script>
+        const session = JSON.parse(sessionStorage.getItem('portal_session'));
+        if (!session) {
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('role-badge').innerText = session.role;
+            if (session.role === 'ADMIN') document.getElementById('btn-back-admin').classList.remove('hidden');
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('portal_session');
+            window.location.href = 'index.html';
+        }
+
+        function switchSection(sec) {
+            ['sec-req', 'sec-staff', 'sec-deliver', 'sec-sol', 'sec-prep', 'sec-timeline'].forEach(id => document.getElementById(id).classList.add('hidden'));
+            ['btn-sec-req', 'btn-sec-staff', 'btn-sec-deliver', 'btn-sec-sol', 'btn-sec-prep', 'btn-sec-timeline'].forEach(id => {
+                document.getElementById(id).className = "px-3 py-1.5 text-xs font-semibold rounded-lg text-gray-600 hover:bg-gray-100 transition shrink-0 min-h-[36px]";
+            });
+
+            if (sec === 'REQ') {
+                document.getElementById('sec-req').classList.remove('hidden');
+                document.getElementById('btn-sec-req').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 transition shrink-0 min-h-[36px]";
+            } else if (sec === 'STAFF') {
+                document.getElementById('sec-staff').classList.remove('hidden');
+                document.getElementById('btn-sec-staff').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 transition shrink-0 min-h-[36px]";
+            } else if (sec === 'DELIVER') {
+                document.getElementById('sec-deliver').classList.remove('hidden');
+                document.getElementById('btn-sec-deliver').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 transition shrink-0 min-h-[36px]";
+            } else if (sec === 'SOL') {
+                document.getElementById('sec-sol').classList.remove('hidden');
+                document.getElementById('btn-sec-sol').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 transition shrink-0 min-h-[36px]";
+            } else if (sec === 'PREP') {
+                document.getElementById('sec-prep').classList.remove('hidden');
+                document.getElementById('btn-sec-prep').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-50 text-amber-800 border border-amber-200 transition shrink-0 min-h-[36px]";
+            } else if (sec === 'TIMELINE') {
+                document.getElementById('sec-timeline').classList.remove('hidden');
+                document.getElementById('btn-sec-timeline').className = "px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 transition shrink-0 min-h-[36px]";
+                initTimelineTracker();
+            }
+        }
+
+        const timelineDays = [
+            { dayIndex: 1, dateStr: "2026-09-08", label: "D1", displayDate: "08/09", weekday: "Thứ 3" },
+            { dayIndex: 2, dateStr: "2026-09-09", label: "D2", displayDate: "09/09", weekday: "Thứ 4" },
+            { dayIndex: 3, dateStr: "2026-09-10", label: "D3", displayDate: "10/09", weekday: "Thứ 5" },
+            { dayIndex: 4, dateStr: "2026-09-11", label: "D4", displayDate: "11/09", weekday: "Thứ 6" },
+            { dayIndex: 5, dateStr: "2026-09-12", label: "D5", displayDate: "12/09", weekday: "Thứ 7" },
+            { dayIndex: 6, dateStr: "2026-09-13", label: "D6", displayDate: "13/09", weekday: "Chủ nhật" },
+            { dayIndex: 7, dateStr: "2026-09-14", label: "D7", displayDate: "14/09", weekday: "Thứ 2" },
+            { dayIndex: 8, dateStr: "2026-09-15", label: "D8", displayDate: "15/09", weekday: "Thứ 3" },
+            { dayIndex: 9, dateStr: "2026-09-16", label: "D9", displayDate: "16/09", weekday: "Thứ 4" },
+            { dayIndex: 10, dateStr: "2026-09-17", label: "D10", displayDate: "17/09", weekday: "Thứ 5" },
+            { dayIndex: 11, dateStr: "2026-09-18", label: "D11", displayDate: "18/09", weekday: "Thứ 6" },
+            { dayIndex: 12, dateStr: "2026-09-19", label: "D12", displayDate: "19/09", weekday: "Thứ 7" },
+            { dayIndex: 13, dateStr: "2026-09-20", label: "D13", displayDate: "20/09", weekday: "Chủ nhật" },
+            { dayIndex: 14, dateStr: "2026-09-21", label: "D14", displayDate: "21/09", weekday: "Thứ 2" },
+            { dayIndex: 15, dateStr: "2026-09-22", label: "D15", displayDate: "22/09", weekday: "Thứ 3" }
+        ];
+
+        const timelineTasks = [
+            {
+                stt: "1",
+                name: "Kiểm tra, test tín hiệu & dán nhãn toàn bộ cáp ở xưởng cũ",
+                desc: "Kiểm tra vật lý đường cáp; Bấm lại đầu mạng hỏng và dán nhãn định danh 2 đầu cáp; Lập bảng Port Mapping[cite: 3, 5].",
+                resource: "2 Kỹ sư (INF)",
+                daysActive: [1, 2],
+                type: "onsite"
+            },
+            {
+                stt: "2",
+                name: "Thu thập cấu hình thiết bị mạng nội bộ",
+                desc: "Thu thập cấu hình Switch, Router, Firewall; Rà soát phân chia VLAN, IP schema, Routing, Uplink traffic & cơ chế dự phòng HA[cite: 3, 5].",
+                resource: "2 Kỹ sư (CC)",
+                daysActive: [1, 2],
+                type: "onsite"
+            },
+            {
+                stt: "3",
+                name: "Thu thập cấu hình Server và Storage nội bộ",
+                desc: "Ghi nhận thông số phần cứng, OS, Network Interface của Server; Kiểm tra cấu hình SAN Storage, cơ chế RAID, phân vùng lưu trữ LUN[cite: 3, 5].",
+                resource: "1 Kỹ sư (SYS)",
+                daysActive: [1, 2],
+                type: "onsite"
+            },
+            {
+                stt: "4",
+                name: "Thu thập cấu hình hệ thống Camera giám sát",
+                desc: "Quét toàn bộ dải IP/MAC Camera; Kiểm tra công suất cấp nguồn PoE và thông số QoS ưu tiên luồng hình ảnh trên Switch kết nối[cite: 3, 5].",
+                resource: "1 Kỹ sư (CC)",
+                daysActive: [1, 2],
+                type: "onsite"
+            },
+            {
+                stt: "5",
+                name: "Thu thập cấu hình Wi-Fi & Đo kiểm bản đồ nhiệt (Heatmap)",
+                desc: "Backup cấu hình AP/Controller tập trung; Dùng thiết bị đo sóng Heatmap toàn bộ văn phòng/nhà xưởng; Phân tích nhiễu, điểm chết & test Roaming[cite: 3, 5].",
+                resource: "1 Kỹ sư (CC)",
+                daysActive: [1, 2],
+                type: "onsite"
+            },
+            {
+                stt: "6",
+                name: "Lắp đặt thiết bị NUC/PC & Thiết lập hệ thống giám sát",
+                desc: "Lắp đặt NUC/PC, cấu hình BIOS Always-on, cấp IP tĩnh; Cài đặt OS và phần mềm/agent giám sát; Cấu hình Trunk port & mở SNMP trên thiết bị mạng[cite: 3, 5].",
+                resource: "2 Kỹ sư (CC/SYS)",
+                daysActive: [1, 2],
+                type: "onsite"
+            },
+            {
+                stt: "7.1",
+                name: "Giám sát hiệu năng & lưu lượng mạng (Network & Bandwidth)",
+                desc: "Theo dõi 24/7 tải CPU/RAM, băng thông Uplink, lỗi cổng, tỷ lệ packet drop trên Core/Access Switch và Router[cite: 3, 5].",
+                resource: "1 Kỹ sư (NOC)",
+                daysActive: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+                type: "monitor"
+            },
+            {
+                stt: "7.2",
+                name: "Giám sát tình trạng Server, Storage & Ổn định Wi-Fi/Camera",
+                desc: "Ghi nhận chỉ số hoạt động Server (tải tài nguyên, dịch vụ chạy ngầm), Camera stream, dung lượng Storage và mật độ kết nối Wi-Fi[cite: 3, 5].",
+                resource: "1 Kỹ sư (SYS/CC)",
+                daysActive: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
+                type: "monitor"
+            },
+            {
+                stt: "7.3",
+                name: "Xử lý, phân tích dữ liệu giám sát & Lập báo cáo kỹ thuật",
+                desc: "Trích xuất log và biểu đồ giám sát; Phân tích các sự cố bất thường; Tổng hợp báo cáo đánh giá hiện trạng và đề xuất giải pháp nâng cấp/tối ưu[cite: 3, 5].",
+                resource: "HuyNA (PM)",
+                daysActive: [14, 15],
+                type: "report"
+            },
+            {
+                stt: "8",
+                name: "Họp thuyết minh, bàn giao bộ hồ sơ kỹ thuật & Nghiệm thu dự án",
+                desc: "Trình bày báo cáo đánh giá với Ban quản lý; Bàn giao toàn bộ tài liệu Deliverables (Sơ đồ, Bảng kiểm kê, File backup config, Heatmap, Báo cáo)[cite: 3, 5].",
+                resource: "HuyNA (PM)",
+                daysActive: [15],
+                type: "deliver"
+            }
+        ];
+
+        let selectedDayIndex = 1;
+
+        function initTimelineTracker() {
+            updateRealtimeClock();
+            autoDetectCurrentDay();
+            renderDaySelectorButtons();
+            renderSelectedDayCard();
+            renderGanttMatrix();
+        }
+
+        function updateRealtimeClock() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' });
+            document.getElementById('realtime-clock').innerText = dateStr;
+        }
+
+        function autoDetectCurrentDay() {
+            const now = new Date();
+            const nowStr = now.toISOString().split('T')[0];
+            
+            const found = timelineDays.find(d => d.dateStr === nowStr);
+            if (found) {
+                selectedDayIndex = found.dayIndex;
+            } else if (nowStr < timelineDays[0].dateStr) {
+                selectedDayIndex = 1;
+            } else if (nowStr > timelineDays[timelineDays.length - 1].dateStr) {
+                selectedDayIndex = 15;
+            }
+        }
+
+        function resetToRealtimeDate() {
+            autoDetectCurrentDay();
+            renderDaySelectorButtons();
+            renderSelectedDayCard();
+            renderGanttMatrix();
+        }
+
+        function selectTimelineDay(dayIdx) {
+            selectedDayIndex = dayIdx;
+            renderDaySelectorButtons();
+            renderSelectedDayCard();
+            renderGanttMatrix();
+        }
+
+        function renderDaySelectorButtons() {
+            const container = document.getElementById('timeline-day-buttons');
+            container.innerHTML = '';
+
+            const nowStr = new Date().toISOString().split('T')[0];
+
+            timelineDays.forEach(d => {
+                const isSelected = d.dayIndex === selectedDayIndex;
+                const isRealToday = d.dateStr === nowStr;
+
+                const btn = document.createElement('button');
+                btn.onclick = () => selectTimelineDay(d.dayIndex);
+                
+                let baseStyle = "p-1.5 rounded-lg border transition flex flex-col items-center justify-center font-bold text-center";
+                if (isSelected) {
+                    baseStyle += " bg-indigo-600 text-white border-indigo-700 shadow-md scale-105";
+                } else if (isRealToday) {
+                    baseStyle += " bg-amber-200 text-amber-950 border-amber-400 font-black";
+                } else {
+                    baseStyle += " bg-white text-gray-700 border-gray-200 hover:bg-indigo-50 hover:text-indigo-600";
+                }
+
+                btn.className = baseStyle;
+                btn.innerHTML = `
+                    <span class="text-[10px] leading-tight">${d.label}</span>
+                    <span class="text-[9px] font-normal leading-tight">${d.displayDate}</span>
+                    ${isRealToday ? '<span class="text-[8px] text-red-600 font-extrabold">HÔM NAY</span>' : ''}
+                `;
+                container.appendChild(btn);
+            });
+        }
+
+        function renderSelectedDayCard() {
+            const card = document.getElementById('selected-day-details-card');
+            const dayObj = timelineDays.find(d => d.dayIndex === selectedDayIndex);
+            if (!dayObj) return;
+
+            const activeTasks = timelineTasks.filter(t => t.daysActive.includes(selectedDayIndex));
+
+            let tasksHtml = '';
+            if (activeTasks.length === 0) {
+                tasksHtml = '<div class="text-xs text-gray-500 italic">Không có hạng mục công việc diễn ra trong ngày này.</div>';
+            } else {
+                tasksHtml = activeTasks.map(t => {
+                    let badgeColor = "bg-amber-100 text-amber-800 border-amber-300";
+                    if (t.type === "monitor") badgeColor = "bg-blue-100 text-blue-800 border-blue-300";
+                    if (t.type === "report" || t.type === "deliver") badgeColor = "bg-emerald-100 text-emerald-800 border-emerald-300";
+
+                    return `
+                        <div class="p-3 bg-white rounded-xl border border-amber-200 shadow-xs flex flex-col sm:flex-row justify-between sm:items-start gap-2.5">
+                            <div class="space-y-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${badgeColor}">Mã: ${t.stt}</span>
+                                    <h5 class="font-bold text-gray-900 text-xs sm:text-sm truncate">${t.name}</h5>
+                                </div>
+                                <p class="text-[11px] sm:text-xs text-gray-600 leading-relaxed">${t.desc}</p>
+                            </div>
+                            <div class="shrink-0 text-right sm:self-center bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                <div class="text-[10px] text-gray-400 font-bold uppercase">Nhân sự thực hiện</div>
+                                <div class="text-xs font-bold text-indigo-700">${t.resource}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            card.innerHTML = `
+                <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-amber-200 pb-3 mb-3">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center text-base font-black shadow-sm">
+                            ${dayObj.label}
+                        </div>
+                        <div>
+                            <div class="text-[10px] font-bold text-amber-800 uppercase">Chi tiết tiến độ ngày đang chọn</div>
+                            <h4 class="font-black text-gray-900 text-sm sm:text-base">${dayObj.weekday}, Ngày ${dayObj.displayDate}/2026</h4>
+                        </div>
+                    </div>
+                    <span class="self-start sm:self-auto px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-xs font-bold border border-amber-300">
+                        ⚡ Đang thực hiện ${activeTasks.length} hạng mục
+                    </span>
+                </div>
+
+                <div class="space-y-2.5">
+                    ${tasksHtml}
+                </div>
+            `;
+        }
+
+        function renderGanttMatrix() {
+            const tbody = document.getElementById('gantt-tbody');
+            tbody.innerHTML = '';
+
+            for (let i = 1; i <= 15; i++) {
+                const headerCols = document.querySelectorAll(`.day-col-${i}`);
+                headerCols.forEach(col => {
+                    if (i === selectedDayIndex) {
+                        col.classList.add('today-highlight-col');
+                    } else {
+                        col.classList.remove('today-highlight-col');
+                    }
+                });
+            }
+
+            timelineTasks.forEach(task => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50 text-xs";
+
+                let dayCells = '';
+                for (let d = 1; d <= 15; d++) {
+                    const isActive = task.daysActive.includes(d);
+                    const isSelected = d === selectedDayIndex;
+                    
+                    let cellContent = '';
+                    if (isActive) {
+                        if (task.type === 'onsite') {
+                            cellContent = '<span class="inline-block w-4 h-4 rounded bg-amber-500 text-white font-bold text-[10px] text-center leading-4">■</span>';
+                        } else if (task.type === 'monitor') {
+                            cellContent = '<span class="inline-block w-4 h-4 rounded bg-blue-600 text-white font-bold text-[10px] text-center leading-4">■</span>';
+                        } else if (task.type === 'report') {
+                            cellContent = '<span class="inline-block w-4 h-4 rounded bg-emerald-600 text-white font-bold text-[10px] text-center leading-4">■</span>';
+                        } else if (task.type === 'deliver') {
+                            cellContent = '<span class="inline-block w-4 h-4 rounded bg-emerald-600 text-white font-bold text-[10px] text-center leading-4">★</span>';
+                        }
+                    }
+
+                    dayCells += `
+                        <td class="p-1 text-center day-col-${d} ${isSelected ? 'today-highlight-col' : ''}">
+                            ${cellContent}
+                        </td>
+                    `;
+                }
+
+                tr.innerHTML = `
+                    <td class="p-2.5 text-center font-bold text-gray-500 sticky left-0 bg-white z-10">${task.stt}</td>
+                    <td class="p-2.5 font-semibold text-gray-900 sticky left-10 bg-white z-10 border-r">
+                        <div class="line-clamp-2">${task.name}</div>
+                    </td>
+                    <td class="p-2.5 text-center text-gray-500 whitespace-nowrap">${task.resource.split('(')[0]}</td>
+                    ${dayCells}
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
